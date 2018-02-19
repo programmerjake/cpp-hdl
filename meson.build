@@ -5,5 +5,5 @@ src = [
     'parse_error.cpp',
     'source.cpp',
     'tokenizer.cpp']
-executable('cpp-hdl', src, dependencies : thread_dep)
+executable('cpp-hdl', src, dependencies : [thread_dep])
 

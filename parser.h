@@ -17,4 +17,6 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-0 0b010101 0xAbcdEF 0h1234 0o3777 0d1024 4096 module abcdef
+#pragma once
+
+
