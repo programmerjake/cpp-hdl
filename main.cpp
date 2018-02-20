@@ -21,7 +21,7 @@
 #include "tokenizer.h"
 #include "string_view.h"
 #include "parse_error.h"
-#include "big_integer.h"
+#include "bit_vector.h"
 
 int main(int argc, char **argv)
 {
