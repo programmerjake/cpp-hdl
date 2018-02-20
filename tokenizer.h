@@ -45,6 +45,8 @@ enum class TokenType : std::uint_fast8_t
     LineComment,
 
     FSlash,
+    LBrace,
+    RBrace,
 };
 
 struct Token final
@@ -77,6 +79,10 @@ struct Token final
             return "<LineComment>"_sv;
         case Type::FSlash:
             return "/"_sv;
+        case Type::LBrace:
+            return "{"_sv;
+        case Type::RBrace:
+            return "}"_sv;
         }
         return {};
     }
@@ -98,11 +104,27 @@ struct Token final
     {
     }
     GMPInteger getValue() const;
+    static constexpr bool isComment(Type type) noexcept
+    {
+        switch(type)
+        {
+        case Type::BlockComment:
+        case Type::LineComment:
+            return true;
+        default:
+            return false;
+        }
+    }
+    constexpr bool isComment() const noexcept
+    {
+        return isComment(type);
+    }
 };
 
 class Tokenizer final
 {
     friend GMPInteger Token::getValue() const;
+
 private:
     struct TokenParser;
 

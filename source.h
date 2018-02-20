@@ -149,6 +149,14 @@ struct LocationRange
     {
         return Location(source, offset + size);
     }
+    constexpr void setBegin(Location begin) noexcept
+    {
+        *this = LocationRange(begin, end());
+    }
+    constexpr void setEnd(Location end) noexcept
+    {
+        *this = LocationRange(begin(), end);
+    }
     const Source *getNonnullSource() const noexcept
     {
         if(source)

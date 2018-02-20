@@ -17,6 +17,22 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module
+#include "parser.h"
+
+ast::Module *Parser::parseModule()
 {
+    auto moduleToken = matchToken(TokenType::Module, "expected module definition");
+    auto *retval = arena.create<ast::Module>(moduleToken.locationRange);
+    matchToken(TokenType::LBrace, "expected '{' after module keyword in module definition");
+    auto rBraceToken = matchToken(TokenType::RBrace, "expected '}'");
+    retval->locationRange.setEnd(rBraceToken.locationRange.end());
+    return retval;
+}
+
+ast::Module *Parser::parseTopLevelModule()
+{
+    auto module = parseModule();
+    if(peek().type != TokenType::EndOfFile)
+        throw ParseError(peek().locationRange.begin(), "extra tokens before end of file");
+    return module;
 }

@@ -256,6 +256,15 @@ struct Tokenizer::TokenParser
                 throw ParseError(currentLocation, "number is missing digits after base indicator");
             return Token(tokenType, LocationRange(startLocation, currentLocation));
         }
+        switch(peek())
+        {
+        case '{':
+            get();
+            return Token(TokenType::LBrace, LocationRange(startLocation, currentLocation));
+        case '}':
+            get();
+            return Token(TokenType::RBrace, LocationRange(startLocation, currentLocation));
+        }
         throw ParseError(currentLocation, "illegal character");
     }
 };

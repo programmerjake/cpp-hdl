@@ -22,6 +22,7 @@
 #include "string_view.h"
 #include "parse_error.h"
 #include "bit_vector.h"
+#include "parser.h"
 
 int main(int argc, char **argv)
 {
@@ -33,32 +34,9 @@ int main(int argc, char **argv)
     try
     {
         auto source = Source::makeSourceFromFile(argv[1]);
-        Tokenizer tokenizer(source.get());
-        while(true)
-        {
-            auto t = tokenizer.get();
-            std::cout << t.locationRange << ": " << t.getTypeString() << ": " << t.getText();
-            switch(t.type)
-            {
-            case TokenType::UnprefixedDecimalLiteralInteger:
-            case TokenType::DecimalLiteralInteger:
-                std::cout << ": " << t.getValue();
-                break;
-            case TokenType::HexadecimalLiteralInteger:
-            case TokenType::BinaryLiteralInteger:
-                std::cout << std::hex << std::uppercase << ": 0x" << t.getValue()
-                          << std::dec;
-                break;
-            case TokenType::OctalLiteralInteger:
-                std::cout << std::oct << ": 0o" << t.getValue() << std::dec;
-                break;
-            default:
-                break;
-            }
-            std::cout << std::endl;
-            if(t.type == TokenType::EndOfFile)
-                break;
-        }
+        Arena arena;
+        auto module = Parser::parseTopLevelModule(Tokenizer(source.get()), arena);
+        module->dump();
     }
     catch(ParseError &e)
     {
