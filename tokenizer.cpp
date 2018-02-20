@@ -201,7 +201,7 @@ struct Tokenizer::TokenParser
         }
         if(isDigit(peek()))
         {
-            auto tokenType = TokenType::DecimalLiteralInteger;
+            auto tokenType = TokenType::UnprefixedDecimalLiteralInteger;
             bool hasDigits = true;
             int base = 10;
             if(peek() == '0')
@@ -259,6 +259,46 @@ struct Tokenizer::TokenParser
         throw ParseError(currentLocation, "illegal character");
     }
 };
+
+GMPInteger Token::getValue() const
+{
+    util::string_view text = getText();
+    int base = 10;
+    switch(type)
+    {
+    case Type::UnprefixedDecimalLiteralInteger:
+        base = 10;
+        break;
+    case Type::DecimalLiteralInteger:
+        text.remove_prefix(2);
+        base = 10;
+        break;
+    case Type::HexadecimalLiteralInteger:
+        text.remove_prefix(2);
+        base = 16;
+        break;
+    case Type::OctalLiteralInteger:
+        text.remove_prefix(2);
+        base = 8;
+        break;
+    case Type::BinaryLiteralInteger:
+        text.remove_prefix(2);
+        base = 2;
+        break;
+    default:
+        assert(false);
+        return {};
+    }
+    GMPInteger value(0UL);
+    for(unsigned char ch : text)
+    {
+        int digitValue = Tokenizer::TokenParser::getDigitValue(ch, base);
+        mpz_mul_ui(value, value, base);
+        if(digitValue > 0)
+            mpz_add_ui(value, value, digitValue);
+    }
+    return value;
+}
 
 Token Tokenizer::parseToken(Location &currentLocation)
 {

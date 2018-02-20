@@ -37,8 +37,25 @@ int main(int argc, char **argv)
         while(true)
         {
             auto t = tokenizer.get();
-            std::cout << t.locationRange << ": " << t.getTypeString() << ": " << t.getText()
-                      << std::endl;
+            std::cout << t.locationRange << ": " << t.getTypeString() << ": " << t.getText();
+            switch(t.type)
+            {
+            case TokenType::UnprefixedDecimalLiteralInteger:
+            case TokenType::DecimalLiteralInteger:
+                std::cout << ": " << t.getValue();
+                break;
+            case TokenType::HexadecimalLiteralInteger:
+            case TokenType::BinaryLiteralInteger:
+                std::cout << std::hex << std::uppercase << ": 0x" << t.getValue()
+                          << std::dec;
+                break;
+            case TokenType::OctalLiteralInteger:
+                std::cout << std::oct << ": 0o" << t.getValue() << std::dec;
+                break;
+            default:
+                break;
+            }
+            std::cout << std::endl;
             if(t.type == TokenType::EndOfFile)
                 break;
         }

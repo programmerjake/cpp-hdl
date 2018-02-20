@@ -25,6 +25,9 @@
 #include <type_traits>
 #include <gmp.h>
 #include <stdexcept>
+#include <cassert>
+#include <ostream>
+#include "string_view.h"
 
 struct GMPInteger
 {
@@ -84,12 +87,182 @@ struct GMPInteger
     {
         return std::move(value);
     }
+    operator bool() const = delete;
+    friend std::ostream &operator<<(std::ostream &os, const GMPInteger &value)
+    {
+        using namespace util::string_view_literals;
+        if(mpz_sgn(value.value) == 0)
+        {
+            os << "0";
+            return os;
+        }
+        int base = 10;
+        auto baseIndicatorUpper = ""_sv;
+        auto baseIndicatorLower = ""_sv;
+        switch(os.flags() & std::ios::basefield)
+        {
+        case std::ios::oct:
+            base = 8;
+            baseIndicatorUpper = "0"_sv;
+            baseIndicatorLower = "0"_sv;
+            break;
+        case std::ios::hex:
+            base = 16;
+            baseIndicatorUpper = "0X"_sv;
+            baseIndicatorLower = "0x"_sv;
+            break;
+        default:
+            break;
+        }
+        auto baseIndicator = ""_sv;
+        if(os.flags() & std::ios::uppercase)
+        {
+            base = -base;
+            if(os.flags() & std::ios::showbase)
+                baseIndicator = baseIndicatorUpper;
+        }
+        else if(os.flags() & std::ios::showbase)
+        {
+            baseIndicator = baseIndicatorLower;
+        }
+        std::unique_ptr<char[]> buffer(new char[mpz_sizeinbase(value, base) + 2 + baseIndicator.size()]);
+        for(std::size_t i = 0; i < baseIndicator.size(); i++)
+            buffer[i] = baseIndicator[i];
+        mpz_get_str(buffer.get() + baseIndicator.size(), base, value);
+        os << buffer.get();
+        return os;
+    }
 };
 
 class BitVector
 {
+public:
+    enum class Kind
+    {
+        Signed,
+        Unsigned,
+    };
+
 private:
-    GMPInteger value;
+    Kind kind;
     std::size_t bitCount;
-#error finish
+    GMPInteger value;
+    struct NormalizedAlreadyTag
+    {
+        friend class BitVector;
+
+    private:
+        explicit NormalizedAlreadyTag() = default;
+    };
+    static GMPInteger normalizeUnsigned(std::size_t bitCount, GMPInteger value)
+    {
+        mpz_fdiv_r_2exp(value, value, bitCount);
+        return value;
+    }
+    static GMPInteger normalizeSigned(std::size_t bitCount, GMPInteger value)
+    {
+        if(bitCount == 0)
+        {
+            mpz_set_ui(value, 0);
+            return value;
+        }
+        bool isNegative = mpz_tstbit(value, bitCount - 1);
+        if(isNegative)
+            mpz_neg(value, value);
+        mpz_fdiv_r_2exp(value, value, bitCount);
+        if(isNegative)
+            mpz_neg(value, value);
+        return value;
+    }
+    static GMPInteger normalize(Kind kind, std::size_t bitCount, GMPInteger value)
+    {
+        switch(kind)
+        {
+        case Kind::Unsigned:
+            return normalizeUnsigned(bitCount, std::move(value));
+        case Kind::Signed:
+            return normalizeSigned(bitCount, std::move(value));
+        }
+        assert(false);
+        return normalizeUnsigned(bitCount, std::move(value));
+    }
+
+public:
+    BitVector() : kind(Kind::Unsigned), bitCount(1), value()
+    {
+    }
+    BitVector(Kind kind, std::size_t bitCount) : kind(kind), bitCount(bitCount), value()
+    {
+    }
+    BitVector(Kind kind, std::size_t bitCount, GMPInteger value)
+        : kind(kind), bitCount(bitCount), value(normalize(kind, bitCount, std::move(value)))
+    {
+    }
+    BitVector(Kind kind, std::size_t bitCount, GMPInteger value, NormalizedAlreadyTag)
+        : kind(kind), bitCount(bitCount), value(std::move(value))
+    {
+    }
+    std::size_t getBitCount() const noexcept
+    {
+        return bitCount;
+    }
+    Kind getKind() const noexcept
+    {
+        return kind;
+    }
+    const GMPInteger &getValue() const noexcept
+    {
+        return value;
+    }
+    static BitVector add(Kind kind, std::size_t bitCount, BitVector l, const BitVector &r)
+    {
+        mpz_add(l.value, l.value, r.value);
+        return BitVector(kind, bitCount, std::move(l.value));
+    }
+    static BitVector subtract(Kind kind, std::size_t bitCount, BitVector l, const BitVector &r)
+    {
+        mpz_sub(l.value, l.value, r.value);
+        return BitVector(kind, bitCount, std::move(l.value));
+    }
+    static BitVector multiply(Kind kind, std::size_t bitCount, BitVector l, const BitVector &r)
+    {
+        mpz_mul(l.value, l.value, r.value);
+        return BitVector(kind, bitCount, std::move(l.value));
+    }
+    static BitVector shiftLeft(Kind kind, std::size_t bitCount, BitVector l, const BitVector &r)
+    {
+        if(mpz_cmp_ui(r.value.value, bitCount) >= 0 || mpz_sgn(r.value.value) < 0)
+            mpz_set_ui(l.value, 0);
+        else
+            mpz_mul_2exp(l.value, l.value, mpz_get_ui(r.value));
+        return BitVector(kind, bitCount, std::move(l.value));
+    }
+    static BitVector shiftRight(Kind kind, std::size_t bitCount, BitVector l, const BitVector &r)
+    {
+        if(mpz_cmp_ui(r.value.value, bitCount) >= 0 || mpz_sgn(r.value.value) < 0)
+            mpz_set_ui(l.value, mpz_sgn(l.value.value) < 0 ? -1 : 0);
+        else
+            mpz_fdiv_r_2exp(l.value, l.value, mpz_get_ui(r.value));
+        return BitVector(kind, bitCount, std::move(l.value));
+    }
+    static BitVector concatenate(BitVector l, const BitVector &r)
+    {
+        l.bitCount += r.bitCount;
+        mpz_mul_2exp(l.value, l.value, r.bitCount);
+        mpz_add(l.value, l.value, normalizeUnsigned(r.bitCount, r.value));
+        return l;
+    }
+    static BitVector slice(Kind kind, std::size_t bitCount, BitVector value, std::size_t startBit)
+    {
+        mpz_fdiv_q_2exp(value.value, value.value, startBit);
+        return BitVector(kind, bitCount, std::move(value.value));
+    }
+    static BitVector cast(Kind kind, std::size_t bitCount, BitVector value)
+    {
+        return BitVector(kind, bitCount, std::move(value.value));
+    }
+    static int compare(const BitVector &l, const BitVector &r) noexcept
+    {
+        return mpz_cmp(l.value, r.value);
+    }
 };

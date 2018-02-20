@@ -23,11 +23,13 @@
 #include <cassert>
 #include "string_view.h"
 #include <cstdint>
+#include "bit_vector.h"
 
 enum class TokenType : std::uint_fast8_t
 {
     EndOfFile = 0,
 
+    UnprefixedDecimalLiteralInteger,
     DecimalLiteralInteger,
     HexadecimalLiteralInteger,
     OctalLiteralInteger,
@@ -55,6 +57,8 @@ struct Token final
         {
         case Type::EndOfFile:
             return "<EndOfFile>"_sv;
+        case Type::UnprefixedDecimalLiteralInteger:
+            return "<UnprefixedDecimalLiteralInteger>"_sv;
         case Type::DecimalLiteralInteger:
             return "<DecimalLiteralInteger>"_sv;
         case Type::HexadecimalLiteralInteger:
@@ -93,10 +97,12 @@ struct Token final
                                                                        locationRange(locationRange)
     {
     }
+    GMPInteger getValue() const;
 };
 
 class Tokenizer final
 {
+    friend GMPInteger Token::getValue() const;
 private:
     struct TokenParser;
 
