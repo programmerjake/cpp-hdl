@@ -34,8 +34,8 @@ int main(int argc, char **argv)
     try
     {
         auto source = Source::makeSourceFromFile(argv[1]);
-        Arena arena;
-        auto module = Parser::parseTopLevelModule(Tokenizer(source.get()), arena);
+        ast::Context context;
+        auto module = Parser::parseTopLevelModule(Tokenizer(source.get()), context);
         module->dump();
     }
     catch(ParseError &e)

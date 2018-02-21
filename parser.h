@@ -29,10 +29,51 @@ class Parser final
 {
 private:
     Tokenizer tokenizer;
-    Arena &arena;
+    ast::Context &context;
+    ast::SymbolLookupChain currentSymbolLookupChain{};
+    ast::SymbolTable *currentSymbolTable = nullptr;
 
 private:
-    Parser(Tokenizer tokenizer, Arena &arena) : tokenizer(tokenizer), arena(arena)
+    class PushSymbolScope
+    {
+        PushSymbolScope(const PushSymbolScope &) = delete;
+        PushSymbolScope &operator=(const PushSymbolScope &) = delete;
+
+    private:
+        ast::SymbolLookupChain &currentSymbolLookupChain;
+        ast::SymbolTable *&currentSymbolTable;
+        ast::SymbolLookupChain previousSymbolLookupChain;
+        ast::SymbolTable *previousSymbolTable;
+
+    public:
+        PushSymbolScope(Parser *parser,
+                        ast::SymbolLookupChain newSymbolLookupChain,
+                        ast::SymbolTable *newSymbolTable) noexcept
+            : currentSymbolLookupChain(parser->currentSymbolLookupChain),
+              currentSymbolTable(parser->currentSymbolTable),
+              previousSymbolLookupChain(currentSymbolLookupChain),
+              previousSymbolTable(currentSymbolTable)
+        {
+            currentSymbolLookupChain = newSymbolLookupChain;
+            currentSymbolTable = newSymbolTable;
+        }
+        PushSymbolScope(Parser *parser, ast::SymbolTable *newSymbolTable)
+            : PushSymbolScope(
+                  parser,
+                  ast::SymbolLookupChain(parser->context.arena.create<ast::SymbolLookupChainNode>(
+                      parser->currentSymbolLookupChain.head, newSymbolTable)),
+                  newSymbolTable)
+        {
+        }
+        ~PushSymbolScope()
+        {
+            currentSymbolLookupChain = previousSymbolLookupChain;
+            currentSymbolTable = previousSymbolTable;
+        }
+    };
+
+private:
+    Parser(Tokenizer tokenizer, ast::Context &context) : tokenizer(tokenizer), context(context)
     {
     }
 
@@ -67,13 +108,14 @@ private:
 
 private:
     ast::Module *parseModule();
+    ast::Bundle *parseBundle();
 
 private:
     ast::Module *parseTopLevelModule();
 
 public:
-    static ast::Module *parseTopLevelModule(Tokenizer tokenizer, Arena &arena)
+    static ast::Module *parseTopLevelModule(Tokenizer tokenizer, ast::Context &context)
     {
-        return Parser(tokenizer, arena).parseTopLevelModule();
+        return Parser(tokenizer, context).parseTopLevelModule();
     }
 };

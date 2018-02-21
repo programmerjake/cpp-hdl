@@ -35,9 +35,10 @@ enum class TokenType : std::uint_fast8_t
     OctalLiteralInteger,
     BinaryLiteralInteger,
 
+    Bundle,
     Module,
 
-    FirstKeyword = Module,
+    FirstKeyword = Bundle,
     AfterLastKeyword = Module + 1ULL,
 
     Identifier = AfterLastKeyword,
@@ -69,6 +70,8 @@ struct Token final
             return "<OctalLiteralInteger>"_sv;
         case Type::BinaryLiteralInteger:
             return "<BinaryLiteralInteger>"_sv;
+        case Type::Bundle:
+            return "bundle"_sv;
         case Type::Module:
             return "module"_sv;
         case Type::Identifier:

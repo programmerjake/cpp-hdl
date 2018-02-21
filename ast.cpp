@@ -57,6 +57,7 @@ struct DumpVisitor final : public ConstVisitor
     {
     }
     virtual VisitStatus visit(const Module *node) override;
+    virtual VisitStatus visit(const Bundle *node) override;
 };
 
 #define AST_NODE_IMPLEMENT_VISITOR(T)                 \
@@ -73,8 +74,21 @@ AST_NODE_IMPLEMENT_VISITOR(Module)
 
 VisitStatus DumpVisitor::visit(const Module *node)
 {
-    os << indent << "module\n";
+    os << indent << "module " << *node->name << '\n';
     PushIndent pushIndent(this);
+    for(auto *member : node->members)
+        member->visit(*this);
+    return VisitStatus::Continue;
+}
+
+AST_NODE_IMPLEMENT_VISITOR(Bundle)
+
+VisitStatus DumpVisitor::visit(const Bundle *node)
+{
+    os << indent << "bundle " << *node->name << '\n';
+    PushIndent pushIndent(this);
+    for(auto *member : node->members)
+        member->visit(*this);
     return VisitStatus::Continue;
 }
 

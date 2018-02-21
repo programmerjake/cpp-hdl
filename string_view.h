@@ -610,6 +610,19 @@ constexpr u32string_view operator"" _sv(const char32_t *str, std::size_t length)
 }
 }
 
+#if defined(_LIBCPP_CONFIG) && defined(_LIBCPP___STRING)
+namespace std
+{
+template <typename Char_type, typename Traits_type>
+struct hash<util::basic_string_view<Char_type, Traits_type>>
+{
+    std::size_t operator()(util::basic_string_view<Char_type, Traits_type> v) const noexcept
+    {
+        return __do_string_hash(v.data(), v.data() + v.size());
+    }
+};
+}
+#else
 namespace std
 {
 template <typename Char_type, typename Traits_type>
@@ -622,3 +635,45 @@ struct hash<util::basic_string_view<Char_type, Traits_type>>
     }
 };
 }
+
+#if defined(__GLIBCXX__) && defined(_FUNCTIONAL_HASH_H)
+namespace std
+{
+template <>
+struct hash<util::string_view>
+{
+    std::size_t operator()(util::string_view v) const noexcept
+    {
+        return std::_Hash_impl::hash(v.data(), v.size());
+    }
+};
+
+template <>
+struct hash<util::wstring_view>
+{
+    std::size_t operator()(util::wstring_view v) const noexcept
+    {
+        return std::_Hash_impl::hash(v.data(), v.size() * sizeof(wchar_t));
+    }
+};
+
+template <>
+struct hash<util::u16string_view>
+{
+    std::size_t operator()(util::u16string_view v) const noexcept
+    {
+        return std::_Hash_impl::hash(v.data(), v.size() * sizeof(char16_t));
+    }
+};
+
+template <>
+struct hash<util::u32string_view>
+{
+    std::size_t operator()(util::u32string_view v) const noexcept
+    {
+        return std::_Hash_impl::hash(v.data(), v.size() * sizeof(char32_t));
+    }
+};
+}
+#endif
+#endif

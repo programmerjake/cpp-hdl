@@ -17,6 +17,15 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module
+module main
 {
+    module submodule1
+    {
+        bundle bundle1
+        {
+        }
+    }
+    bundle bundle2
+    {
+    }
 }
