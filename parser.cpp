@@ -52,6 +52,10 @@ ast::Module *Parser::parseModule()
         case TokenType::HexadecimalLiteralInteger:
         case TokenType::OctalLiteralInteger:
         case TokenType::BinaryLiteralInteger:
+        case TokenType::Input:
+        case TokenType::Output:
+        case TokenType::SInt:
+        case TokenType::UInt:
         case TokenType::Identifier:
         case TokenType::BlockComment:
         case TokenType::LineComment:
@@ -90,7 +94,7 @@ ast::Bundle *Parser::parseBundle()
 
 ast::Module *Parser::parseTopLevelModule()
 {
-    auto globalSymbolTable = context.arena.create<ast::SymbolTable>();
+    auto globalSymbolTable = ast::SymbolTable::createGlobalSymbolTable(context);
     PushSymbolScope pushSymbolScope(this, globalSymbolTable);
     auto module = parseModule();
     if(peek().type != TokenType::EndOfFile)

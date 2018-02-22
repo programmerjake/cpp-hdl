@@ -62,12 +62,6 @@ public:
     }
 };
 
-struct Context final
-{
-    StringPool stringPool;
-    Arena arena;
-};
-
 struct Node
 {
     LocationRange locationRange;
@@ -78,6 +72,47 @@ struct Node
     virtual VisitStatus visit(Visitor &visitor) = 0;
     virtual VisitStatus visit(ConstVisitor &visitor) const = 0;
     void dump(std::ostream &os = std::cerr) const;
+};
+
+struct Type : public Node
+{
+    /** type after removing all the transparent type aliases; the definition of type equality */
+    Type *const canonicalType;
+    explicit Type(LocationRange locationRange, Type *canonicalType)
+        : Node(locationRange), canonicalType(canonicalType)
+    {
+    }
+    explicit Type(LocationRange locationRange) : Node(locationRange), canonicalType(this)
+    {
+    }
+    friend bool operator==(const Type &a, const Type &b) noexcept
+    {
+        return a.canonicalType == b.canonicalType;
+    }
+    friend bool operator!=(const Type &a, const Type &b) noexcept
+    {
+        return a.canonicalType != b.canonicalType;
+    }
+};
+
+class BitVectorType;
+
+class TypePool final
+{
+private:
+    Arena typeArena;
+    std::unordered_map<std::underlying_type_t<BitVector::Kind>,
+                       std::unordered_map<std::size_t, const BitVectorType *>> bitVectorTypes;
+
+public:
+    const BitVectorType *getBitVectorType(BitVector::Kind kind, std::size_t bitWidth);
+};
+
+struct Context final
+{
+    StringPool stringPool;
+    Arena arena;
+    TypePool typePool;
 };
 
 #define AST_NODE_DECLARE_VISITOR()                              \
@@ -103,14 +138,15 @@ struct SymbolLookupChainNode;
 
 struct SymbolTable
 {
-    std::unordered_map<StringPool::Entry, Symbol *> localSymbols = {};
+    std::unordered_map<StringPool::Entry, Symbol *> localSymbolsMap = {};
+    std::vector<Symbol *> localSymbolsList = {};
     SymbolTable()
     {
     }
     Symbol *find(StringPool::Entry name) const
     {
-        auto iter = localSymbols.find(name);
-        if(iter != localSymbols.end())
+        auto iter = localSymbolsMap.find(name);
+        if(iter != localSymbolsMap.end())
             return std::get<1>(*iter);
         return nullptr;
     }
@@ -118,13 +154,15 @@ struct SymbolTable
     {
         assert(symbol);
         assert(symbol->containingSymbolTable == nullptr);
-        if(std::get<1>(localSymbols.emplace(symbol->name, symbol)))
+        if(std::get<1>(localSymbolsMap.emplace(symbol->name, symbol)))
         {
             symbol->containingSymbolTable = this;
+            localSymbolsList.push_back(symbol);
             return true;
         }
         return false;
     }
+    static SymbolTable *createGlobalSymbolTable(Context &context);
 };
 
 struct SymbolLookupChainNode
@@ -187,21 +225,30 @@ struct Module final : public Node, public Symbol, public SymbolScope
     AST_NODE_DECLARE_VISITOR()
 };
 
-struct Type : public Node
+class BitVectorType final : public Type
 {
-    explicit Type(LocationRange locationRange) : Node(locationRange)
-    {
-    }
-};
+    friend class TypePool;
 
-struct BitVectorType final : public Type
-{
+public:
     BitVector::Kind kind;
     std::size_t bitWidth;
-    BitVectorType(BitVector::Kind kind, std::size_t bitWidth)
+
+private:
+    struct PrivateConstructTag
+    {
+        friend class TypePool;
+
+    private:
+        PrivateConstructTag() = default;
+    };
+
+public:
+    BitVectorType(BitVector::Kind kind, std::size_t bitWidth, PrivateConstructTag)
         : Type({}), kind(kind), bitWidth(bitWidth)
     {
     }
+
+public:
     struct BuiltinAlias
     {
         util::string_view name;
@@ -248,9 +295,32 @@ struct BitVectorType final : public Type
     {
         using namespace util::string_view_literals;
         static constexpr BuiltinAlias builtinAliases[] = {
-            BuiltinAlias("bool"_sv, BitVector::Kind::Unsigned, 1),
+            BuiltinAlias("bit"_sv, BitVector::Kind::Unsigned, 1),
+            BuiltinAlias("u8"_sv, BitVector::Kind::Unsigned, 8),
+            BuiltinAlias("u16"_sv, BitVector::Kind::Unsigned, 16),
+            BuiltinAlias("u32"_sv, BitVector::Kind::Unsigned, 32),
+            BuiltinAlias("u64"_sv, BitVector::Kind::Unsigned, 64),
+            BuiltinAlias("s8"_sv, BitVector::Kind::Signed, 8),
+            BuiltinAlias("s16"_sv, BitVector::Kind::Signed, 16),
+            BuiltinAlias("s32"_sv, BitVector::Kind::Signed, 32),
+            BuiltinAlias("s64"_sv, BitVector::Kind::Signed, 64),
         };
         return BuiltinAliases(builtinAliases);
+    }
+    AST_NODE_DECLARE_VISITOR()
+};
+
+struct TransparentTypeAlias final : public Type, public Symbol
+{
+    const Type *aliasedType;
+    TransparentTypeAlias(LocationRange locationRange,
+                         LocationRange nameLocation,
+                         StringPool::Entry name,
+                         const Type *aliasedType)
+        : Type(locationRange, aliasedType->canonicalType),
+          Symbol(nameLocation, name),
+          aliasedType(aliasedType)
+    {
     }
     AST_NODE_DECLARE_VISITOR()
 };
@@ -279,6 +349,7 @@ struct ConstVisitor
 {
     virtual ~ConstVisitor() = default;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
+    AST_NODE_DECLARE_VISIT_FUNCTION(TransparentTypeAlias)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };
@@ -294,6 +365,7 @@ struct Visitor : public ConstVisitor
 {
     using ConstVisitor::visit;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
+    AST_NODE_DECLARE_VISIT_FUNCTION(TransparentTypeAlias)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };

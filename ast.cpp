@@ -18,6 +18,7 @@
  */
 
 #include "ast.h"
+#include <deque>
 
 namespace ast
 {
@@ -53,10 +54,49 @@ struct DumpVisitor final : public ConstVisitor
             level = previousLevel;
         }
     };
+    std::unordered_map<const void *, std::size_t> visitedObjectNumbers;
+    bool writeObjectNumberAndCheckIfFirst(const void *object)
+    {
+        auto results = visitedObjectNumbers.emplace(object, visitedObjectNumbers.size());
+        os << (std::get<1>(results) ? '=' : '*') << std::get<1>(*std::get<0>(results));
+        return std::get<1>(results);
+    }
     explicit DumpVisitor(std::ostream &os) : os(os)
     {
     }
+    void visit(const SymbolTable *symbolTable)
+    {
+        os << indent << "SymbolTable ";
+        bool isFirst = writeObjectNumberAndCheckIfFirst(symbolTable);
+        os << "\n";
+        if(!isFirst)
+            return;
+        PushIndent pushIndent(this);
+        for(auto &symbol : symbolTable->localSymbolsList)
+        {
+            auto *node = dynamic_cast<const Node *>(symbol);
+            if(node)
+            {
+                node->visit(*this);
+            }
+            else
+            {
+                os << indent << *symbol->name << "<not a Node>\n";
+            }
+        }
+    }
+    void visit(SymbolLookupChain symbolLookupChain)
+    {
+        os << indent << "SymbolLookupChain\n";
+        PushIndent pushIndent(this);
+        std::deque<SymbolTable *> symbolTables;
+        for(auto node = symbolLookupChain.head; node; node = node->parent)
+            symbolTables.push_front(node->symbolTable);
+        for(auto *symbolTable : symbolTables)
+            visit(symbolTable);
+    }
     virtual VisitStatus visit(const Module *node) override;
+    virtual VisitStatus visit(const TransparentTypeAlias *node) override;
     virtual VisitStatus visit(const Bundle *node) override;
     virtual VisitStatus visit(const BitVectorType *node) override;
 };
@@ -71,14 +111,59 @@ struct DumpVisitor final : public ConstVisitor
         return visitor.visit(this);                   \
     }
 
+const BitVectorType *TypePool::getBitVectorType(BitVector::Kind kind, std::size_t bitWidth)
+{
+    auto &retval =
+        bitVectorTypes[static_cast<std::underlying_type_t<BitVector::Kind>>(kind)][bitWidth];
+    if(!retval)
+        retval =
+            typeArena.create<BitVectorType>(kind, bitWidth, BitVectorType::PrivateConstructTag{});
+    return retval;
+}
+
+SymbolTable *SymbolTable::createGlobalSymbolTable(ast::Context &context)
+{
+    auto *retval = context.arena.create<SymbolTable>();
+    for(auto &builtinAlias : BitVectorType::getBuiltinAliases())
+    {
+        bool succeeded = retval->insert(context.arena.create<TransparentTypeAlias>(
+            LocationRange{},
+            LocationRange{},
+            context.stringPool.intern(builtinAlias.name),
+            context.typePool.getBitVectorType(builtinAlias.kind, builtinAlias.bitWidth)));
+        static_cast<void>(succeeded);
+        assert(succeeded);
+    }
+    return retval;
+}
+
 AST_NODE_IMPLEMENT_VISITOR(Module)
 
 VisitStatus DumpVisitor::visit(const Module *node)
 {
-    os << indent << "module " << *node->name << '\n';
+    os << indent << "module " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
     PushIndent pushIndent(this);
+    visit(node->symbolLookupChain);
     for(auto *member : node->members)
         member->visit(*this);
+    return VisitStatus::Continue;
+}
+
+AST_NODE_IMPLEMENT_VISITOR(TransparentTypeAlias)
+
+VisitStatus DumpVisitor::visit(const TransparentTypeAlias *node)
+{
+    os << indent << "TransparentTypeAlias " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    node->aliasedType->visit(*this);
     return VisitStatus::Continue;
 }
 
@@ -86,8 +171,13 @@ AST_NODE_IMPLEMENT_VISITOR(Bundle)
 
 VisitStatus DumpVisitor::visit(const Bundle *node)
 {
-    os << indent << "bundle " << *node->name << '\n';
+    os << indent << "bundle " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
     PushIndent pushIndent(this);
+    visit(node->symbolLookupChain);
     for(auto *member : node->members)
         member->visit(*this);
     return VisitStatus::Continue;
@@ -108,21 +198,17 @@ VisitStatus DumpVisitor::visit(const BitVectorType *node)
         }
     }
     if(!name.empty())
-        os << name;
-    else
+        os << name << ": ";
+    switch(node->kind)
     {
-        switch(node->kind)
-        {
-        case BitVector::Kind::Unsigned:
-            os << "uint";
-            break;
-        case BitVector::Kind::Signed:
-            os << "sint";
-            break;
-        }
-        os << "[" << node->bitWidth << "]";
+    case BitVector::Kind::Unsigned:
+        os << "uint";
+        break;
+    case BitVector::Kind::Signed:
+        os << "sint";
+        break;
     }
-    os << '\n';
+    os << "(" << node->bitWidth << ")\n";
     return VisitStatus::Continue;
 }
 

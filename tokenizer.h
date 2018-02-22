@@ -36,10 +36,14 @@ enum class TokenType : std::uint_fast8_t
     BinaryLiteralInteger,
 
     Bundle,
+    Input,
     Module,
+    Output,
+    SInt,
+    UInt,
 
     FirstKeyword = Bundle,
-    AfterLastKeyword = Module + 1ULL,
+    AfterLastKeyword = UInt + 1ULL,
 
     Identifier = AfterLastKeyword,
     BlockComment,
@@ -72,8 +76,16 @@ struct Token final
             return "<BinaryLiteralInteger>"_sv;
         case Type::Bundle:
             return "bundle"_sv;
+        case Type::Input:
+            return "input"_sv;
         case Type::Module:
             return "module"_sv;
+        case Type::Output:
+            return "output"_sv;
+        case Type::SInt:
+            return "sint"_sv;
+        case Type::UInt:
+            return "uint"_sv;
         case Type::Identifier:
             return "<Identifier>"_sv;
         case Type::BlockComment:
