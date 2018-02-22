@@ -58,6 +58,7 @@ struct DumpVisitor final : public ConstVisitor
     }
     virtual VisitStatus visit(const Module *node) override;
     virtual VisitStatus visit(const Bundle *node) override;
+    virtual VisitStatus visit(const BitVectorType *node) override;
 };
 
 #define AST_NODE_IMPLEMENT_VISITOR(T)                 \
@@ -89,6 +90,39 @@ VisitStatus DumpVisitor::visit(const Bundle *node)
     PushIndent pushIndent(this);
     for(auto *member : node->members)
         member->visit(*this);
+    return VisitStatus::Continue;
+}
+
+AST_NODE_IMPLEMENT_VISITOR(BitVectorType)
+
+VisitStatus DumpVisitor::visit(const BitVectorType *node)
+{
+    os << indent;
+    util::string_view name = {};
+    for(auto &builtinAlias : BitVectorType::getBuiltinAliases())
+    {
+        if(builtinAlias.kind == node->kind && builtinAlias.bitWidth == node->bitWidth)
+        {
+            name = builtinAlias.name;
+            break;
+        }
+    }
+    if(!name.empty())
+        os << name;
+    else
+    {
+        switch(node->kind)
+        {
+        case BitVector::Kind::Unsigned:
+            os << "uint";
+            break;
+        case BitVector::Kind::Signed:
+            os << "sint";
+            break;
+        }
+        os << "[" << node->bitWidth << "]";
+    }
+    os << '\n';
     return VisitStatus::Continue;
 }
 

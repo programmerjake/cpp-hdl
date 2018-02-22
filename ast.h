@@ -27,6 +27,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <initializer_list>
 #include "string_view.h"
 
 namespace ast
@@ -193,6 +194,67 @@ struct Type : public Node
     }
 };
 
+struct BitVectorType final : public Type
+{
+    BitVector::Kind kind;
+    std::size_t bitWidth;
+    BitVectorType(BitVector::Kind kind, std::size_t bitWidth)
+        : Type({}), kind(kind), bitWidth(bitWidth)
+    {
+    }
+    struct BuiltinAlias
+    {
+        util::string_view name;
+        BitVector::Kind kind;
+        std::size_t bitWidth;
+        constexpr BuiltinAlias(util::string_view name,
+                               BitVector::Kind kind,
+                               std::size_t bitWidth) noexcept : name(name),
+                                                                kind(kind),
+                                                                bitWidth(bitWidth)
+        {
+        }
+    };
+    class BuiltinAliases
+    {
+    public:
+        typedef const BuiltinAlias *iterator;
+        typedef const BuiltinAlias *const_iterator;
+
+    private:
+        const BuiltinAlias *array;
+        std::size_t count;
+
+    public:
+        template <std::size_t N>
+        explicit constexpr BuiltinAliases(const BuiltinAlias(&array)[N]) noexcept : array(array),
+                                                                                    count(N)
+        {
+        }
+        constexpr const_iterator begin() const noexcept
+        {
+            return array;
+        }
+        constexpr const_iterator end() const noexcept
+        {
+            return array + count;
+        }
+        constexpr std::size_t size() const noexcept
+        {
+            return count;
+        }
+    };
+    static BuiltinAliases getBuiltinAliases() noexcept
+    {
+        using namespace util::string_view_literals;
+        static constexpr BuiltinAlias builtinAliases[] = {
+            BuiltinAlias("bool"_sv, BitVector::Kind::Unsigned, 1),
+        };
+        return BuiltinAliases(builtinAliases);
+    }
+    AST_NODE_DECLARE_VISITOR()
+};
+
 struct Bundle final : public Type, public Symbol, public SymbolScope
 {
     std::vector<Node *> members;
@@ -218,6 +280,7 @@ struct ConstVisitor
     virtual ~ConstVisitor() = default;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
+    AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };
 
 #undef AST_NODE_DECLARE_VISIT_FUNCTION
@@ -232,6 +295,7 @@ struct Visitor : public ConstVisitor
     using ConstVisitor::visit;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
+    AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };
 
 #undef AST_NODE_DECLARE_VISIT_FUNCTION
