@@ -32,6 +32,7 @@ private:
     ast::Context &context;
     ast::SymbolLookupChain currentSymbolLookupChain{};
     ast::SymbolTable *currentSymbolTable = nullptr;
+    ast::SymbolTable *globalSymbolTable;
 
 private:
     class PushSymbolScope
@@ -73,7 +74,7 @@ private:
     };
 
 private:
-    Parser(Tokenizer tokenizer, ast::Context &context) : tokenizer(tokenizer), context(context)
+    Parser(Tokenizer tokenizer, ast::Context &context) : tokenizer(tokenizer), context(context), globalSymbolTable(ast::SymbolTable::createGlobalSymbolTable(context))
     {
     }
 
@@ -109,6 +110,9 @@ private:
 private:
     ast::Module *parseModule();
     ast::Bundle *parseBundle();
+    std::vector<ast::Variable *> parseVariables();
+    const ast::Type *parseType();
+    std::pair<ast::Symbol *, Token> parseScopedName();
 
 private:
     ast::Module *parseTopLevelModule();

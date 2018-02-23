@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <ostream>
+#include <limits>
 #include "string_view.h"
 
 struct GMPInteger
@@ -193,14 +194,25 @@ public:
     }
     BitVector(Kind kind, std::size_t bitCount) : kind(kind), bitCount(bitCount), value()
     {
+        assert(bitCount <= maxBitCount());
     }
     BitVector(Kind kind, std::size_t bitCount, GMPInteger value)
         : kind(kind), bitCount(bitCount), value(normalize(kind, bitCount, std::move(value)))
     {
+        assert(bitCount <= maxBitCount());
     }
     BitVector(Kind kind, std::size_t bitCount, GMPInteger value, NormalizedAlreadyTag)
         : kind(kind), bitCount(bitCount), value(std::move(value))
     {
+        assert(bitCount <= maxBitCount());
+    }
+    static constexpr std::size_t maxBitCount() noexcept
+    {
+        auto a = std::numeric_limits<std::size_t>::max();
+        auto b = std::numeric_limits<unsigned long>::max();
+        if(a < b)
+            return a;
+        return b;
     }
     std::size_t getBitCount() const noexcept
     {

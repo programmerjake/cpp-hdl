@@ -264,6 +264,74 @@ struct Tokenizer::TokenParser
         case '}':
             get();
             return Token(TokenType::RBrace, LocationRange(startLocation, currentLocation));
+        case '[':
+            get();
+            return Token(TokenType::LBracket, LocationRange(startLocation, currentLocation));
+        case ']':
+            get();
+            return Token(TokenType::RBracket, LocationRange(startLocation, currentLocation));
+        case '(':
+            get();
+            return Token(TokenType::LParen, LocationRange(startLocation, currentLocation));
+        case ')':
+            get();
+            return Token(TokenType::RParen, LocationRange(startLocation, currentLocation));
+        case ',':
+            get();
+            return Token(TokenType::Comma, LocationRange(startLocation, currentLocation));
+        case ':':
+            get();
+            if(peek() == ':')
+            {
+                get();
+                return Token(TokenType::ColonColon, LocationRange(startLocation, currentLocation));
+            }
+            return Token(TokenType::Colon, LocationRange(startLocation, currentLocation));
+        case ';':
+            get();
+            return Token(TokenType::Semicolon, LocationRange(startLocation, currentLocation));
+        case '~':
+            get();
+            return Token(TokenType::Tilde, LocationRange(startLocation, currentLocation));
+        case '!':
+            get();
+            return Token(TokenType::EMark, LocationRange(startLocation, currentLocation));
+        case '%':
+            get();
+            return Token(TokenType::Percent, LocationRange(startLocation, currentLocation));
+        case '^':
+            get();
+            return Token(TokenType::Caret, LocationRange(startLocation, currentLocation));
+        case '&':
+            get();
+            return Token(TokenType::Amp, LocationRange(startLocation, currentLocation));
+        case '*':
+            get();
+            return Token(TokenType::Star, LocationRange(startLocation, currentLocation));
+        case '-':
+            get();
+            return Token(TokenType::Minus, LocationRange(startLocation, currentLocation));
+        case '=':
+            get();
+            return Token(TokenType::Equal, LocationRange(startLocation, currentLocation));
+        case '+':
+            get();
+            return Token(TokenType::Plus, LocationRange(startLocation, currentLocation));
+        case '|':
+            get();
+            return Token(TokenType::VBar, LocationRange(startLocation, currentLocation));
+        case '.':
+            get();
+            return Token(TokenType::Dot, LocationRange(startLocation, currentLocation));
+        case '<':
+            get();
+            return Token(TokenType::LAngle, LocationRange(startLocation, currentLocation));
+        case '>':
+            get();
+            return Token(TokenType::RAngle, LocationRange(startLocation, currentLocation));
+        case '?':
+            get();
+            return Token(TokenType::QMark, LocationRange(startLocation, currentLocation));
         }
         throw ParseError(currentLocation, "illegal character");
     }

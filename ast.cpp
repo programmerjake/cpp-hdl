@@ -95,8 +95,11 @@ struct DumpVisitor final : public ConstVisitor
         for(auto *symbolTable : symbolTables)
             visit(symbolTable);
     }
+    VisitStatus visit(const Bundle *node, bool isFlipped);
     virtual VisitStatus visit(const Module *node) override;
     virtual VisitStatus visit(const TransparentTypeAlias *node) override;
+    virtual VisitStatus visit(const Variable *node) override;
+    virtual VisitStatus visit(const FlippedBundle *node) override;
     virtual VisitStatus visit(const Bundle *node) override;
     virtual VisitStatus visit(const BitVectorType *node) override;
 };
@@ -111,29 +114,34 @@ struct DumpVisitor final : public ConstVisitor
         return visitor.visit(this);                   \
     }
 
-const BitVectorType *TypePool::getBitVectorType(BitVector::Kind kind, std::size_t bitWidth)
+const BitVectorType *TypePool::getBitVectorType(BitVectorType::Direction direction,
+                                                BitVector::Kind kind,
+                                                std::size_t bitWidth)
 {
-    auto &retval =
-        bitVectorTypes[static_cast<std::underlying_type_t<BitVector::Kind>>(kind)][bitWidth];
+    auto &retval = bitVectorTypes[static_cast<std::underlying_type_t<BitVectorType::Direction>>(
+        direction)][static_cast<std::underlying_type_t<BitVector::Kind>>(kind)][bitWidth];
     if(!retval)
-        retval =
-            typeArena.create<BitVectorType>(kind, bitWidth, BitVectorType::PrivateConstructTag{});
+    {
+        auto flippedDirection = BitVectorType::flipDirection(direction);
+        assert(BitVectorType::flipDirection(flippedDirection) == direction);
+        retval = typeArena.create<BitVectorType>(
+            direction, kind, bitWidth, nullptr, BitVectorType::PrivateAccessTag{});
+        auto &flippedType =
+            bitVectorTypes[static_cast<std::underlying_type_t<BitVectorType::Direction>>(
+                flippedDirection)][static_cast<std::underlying_type_t<BitVector::Kind>>(kind)]
+                          [bitWidth];
+        if(!flippedType)
+            flippedType = typeArena.create<BitVectorType>(
+                flippedDirection, kind, bitWidth, nullptr, BitVectorType::PrivateAccessTag{});
+        flippedType->flippedType = retval;
+        retval->flippedType = flippedType;
+    }
     return retval;
 }
 
 SymbolTable *SymbolTable::createGlobalSymbolTable(ast::Context &context)
 {
     auto *retval = context.arena.create<SymbolTable>();
-    for(auto &builtinAlias : BitVectorType::getBuiltinAliases())
-    {
-        bool succeeded = retval->insert(context.arena.create<TransparentTypeAlias>(
-            LocationRange{},
-            LocationRange{},
-            context.stringPool.intern(builtinAlias.name),
-            context.typePool.getBitVectorType(builtinAlias.kind, builtinAlias.bitWidth)));
-        static_cast<void>(succeeded);
-        assert(succeeded);
-    }
     return retval;
 }
 
@@ -167,33 +175,67 @@ VisitStatus DumpVisitor::visit(const TransparentTypeAlias *node)
     return VisitStatus::Continue;
 }
 
+AST_NODE_IMPLEMENT_VISITOR(Variable)
+
+VisitStatus DumpVisitor::visit(const Variable *node)
+{
+    os << indent << "Variable " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    node->type->visit(*this);
+    return VisitStatus::Continue;
+}
+
+AST_NODE_IMPLEMENT_VISITOR(FlippedBundle)
+
+VisitStatus DumpVisitor::visit(const FlippedBundle *node)
+{
+    auto *flippedType = node->getFlippedType();
+    assert(dynamic_cast<const Bundle *>(flippedType));
+    return visit(static_cast<const Bundle *>(flippedType), true);
+}
+
 AST_NODE_IMPLEMENT_VISITOR(Bundle)
 
-VisitStatus DumpVisitor::visit(const Bundle *node)
+VisitStatus DumpVisitor::visit(const Bundle *node, bool isFlipped)
 {
-    os << indent << "bundle " << *node->name << " ";
+    os << indent;
+    if(isFlipped)
+        os << "!";
+    os << "bundle " << *node->name << " ";
     bool isFirst = writeObjectNumberAndCheckIfFirst(node);
     os << '\n';
     if(!isFirst)
         return VisitStatus::Continue;
     PushIndent pushIndent(this);
     visit(node->symbolLookupChain);
-    for(auto *member : node->members)
-        member->visit(*this);
+    if(node->isDefined())
+        for(auto *member : node->getMembers())
+            member->visit(*this);
+    else
+        os << indent << "<members are not set>\n";
     return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const Bundle *node)
+{
+    return visit(node, false);
 }
 
 AST_NODE_IMPLEMENT_VISITOR(BitVectorType)
 
 VisitStatus DumpVisitor::visit(const BitVectorType *node)
 {
-    os << indent;
+    os << indent << BitVectorType::getDirectionName(node->direction) << " ";
     util::string_view name = {};
     for(auto &builtinAlias : BitVectorType::getBuiltinAliases())
     {
         if(builtinAlias.kind == node->kind && builtinAlias.bitWidth == node->bitWidth)
         {
-            name = builtinAlias.name;
+            name = Token::getTypeString(builtinAlias.name);
             break;
         }
     }

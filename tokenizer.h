@@ -35,14 +35,24 @@ enum class TokenType : std::uint_fast8_t
     OctalLiteralInteger,
     BinaryLiteralInteger,
 
+    Bit,
     Bundle,
     Input,
     Module,
     Output,
+    Reg,
+    S16,
+    S32,
+    S64,
+    S8,
     SInt,
+    U16,
+    U32,
+    U64,
+    U8,
     UInt,
 
-    FirstKeyword = Bundle,
+    FirstKeyword = Bit,
     AfterLastKeyword = UInt + 1ULL,
 
     Identifier = AfterLastKeyword,
@@ -52,6 +62,29 @@ enum class TokenType : std::uint_fast8_t
     FSlash,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
+    LParen,
+    RParen,
+    Comma,
+    Colon,
+    Semicolon,
+    Tilde,
+    EMark,
+    Percent,
+    Caret,
+    Amp,
+    Star,
+    Minus,
+    Equal,
+    Plus,
+    VBar,
+    Dot,
+    LAngle,
+    RAngle,
+    QMark,
+
+    ColonColon,
 };
 
 struct Token final
@@ -74,6 +107,8 @@ struct Token final
             return "<OctalLiteralInteger>"_sv;
         case Type::BinaryLiteralInteger:
             return "<BinaryLiteralInteger>"_sv;
+        case Type::Bit:
+            return "bit"_sv;
         case Type::Bundle:
             return "bundle"_sv;
         case Type::Input:
@@ -82,8 +117,26 @@ struct Token final
             return "module"_sv;
         case Type::Output:
             return "output"_sv;
+        case Type::Reg:
+            return "reg"_sv;
+        case Type::S16:
+            return "s16"_sv;
+        case Type::S32:
+            return "s32"_sv;
+        case Type::S64:
+            return "s64"_sv;
+        case Type::S8:
+            return "s8"_sv;
         case Type::SInt:
             return "sint"_sv;
+        case Type::U16:
+            return "u16"_sv;
+        case Type::U32:
+            return "u32"_sv;
+        case Type::U64:
+            return "u64"_sv;
+        case Type::U8:
+            return "u8"_sv;
         case Type::UInt:
             return "uint"_sv;
         case Type::Identifier:
@@ -98,6 +151,50 @@ struct Token final
             return "{"_sv;
         case Type::RBrace:
             return "}"_sv;
+        case Type::LBracket:
+            return "["_sv;
+        case Type::RBracket:
+            return "]"_sv;
+        case Type::LParen:
+            return "("_sv;
+        case Type::RParen:
+            return ")"_sv;
+        case Type::Comma:
+            return ","_sv;
+        case Type::Colon:
+            return ":"_sv;
+        case Type::Semicolon:
+            return ";"_sv;
+        case Type::Tilde:
+            return "~"_sv;
+        case Type::EMark:
+            return "!"_sv;
+        case Type::Percent:
+            return "%"_sv;
+        case Type::Caret:
+            return "^"_sv;
+        case Type::Amp:
+            return "&"_sv;
+        case Type::Star:
+            return "*"_sv;
+        case Type::Minus:
+            return "-"_sv;
+        case Type::Equal:
+            return "="_sv;
+        case Type::Plus:
+            return "+"_sv;
+        case Type::VBar:
+            return "|"_sv;
+        case Type::Dot:
+            return "."_sv;
+        case Type::LAngle:
+            return "<"_sv;
+        case Type::RAngle:
+            return ">"_sv;
+        case Type::QMark:
+            return "?"_sv;
+        case Type::ColonColon:
+            return "::"_sv;
         }
         return {};
     }

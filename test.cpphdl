@@ -23,9 +23,14 @@ module main
     {
         bundle bundle1
         {
+            a : input bit;
+            b : output u64;
+            c : input uint(65536);
         }
     }
     bundle bundle2
     {
+        b1, b2 : submodule1::bundle1;
+        b3 : !submodule1::bundle1;
     }
 }

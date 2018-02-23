@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <initializer_list>
 #include "string_view.h"
+#include "tokenizer.h"
 
 namespace ast
 {
@@ -76,13 +77,15 @@ struct Node
 
 struct Type : public Node
 {
+    bool isStateless;
     /** type after removing all the transparent type aliases; the definition of type equality */
-    Type *const canonicalType;
-    explicit Type(LocationRange locationRange, Type *canonicalType)
-        : Node(locationRange), canonicalType(canonicalType)
+    const Type *const canonicalType;
+    explicit Type(LocationRange locationRange, bool isStateless, const Type *canonicalType)
+        : Node(locationRange), isStateless(isStateless), canonicalType(canonicalType)
     {
     }
-    explicit Type(LocationRange locationRange) : Node(locationRange), canonicalType(this)
+    explicit Type(LocationRange locationRange, bool isStateless)
+        : Node(locationRange), isStateless(isStateless), canonicalType(this)
     {
     }
     friend bool operator==(const Type &a, const Type &b) noexcept
@@ -93,6 +96,14 @@ struct Type : public Node
     {
         return a.canonicalType != b.canonicalType;
     }
+    virtual const Type *getFlippedType() const noexcept = 0;
+};
+
+enum class BitVectorTypeDirection
+{
+    Input,
+    Output,
+    Reg
 };
 
 class BitVectorType;
@@ -101,11 +112,15 @@ class TypePool final
 {
 private:
     Arena typeArena;
-    std::unordered_map<std::underlying_type_t<BitVector::Kind>,
-                       std::unordered_map<std::size_t, const BitVectorType *>> bitVectorTypes;
+    std::unordered_map<std::underlying_type_t<BitVectorTypeDirection>,
+                       std::unordered_map<std::underlying_type_t<BitVector::Kind>,
+                                          std::unordered_map<std::size_t, BitVectorType *>>>
+        bitVectorTypes;
 
 public:
-    const BitVectorType *getBitVectorType(BitVector::Kind kind, std::size_t bitWidth);
+    const BitVectorType *getBitVectorType(BitVectorTypeDirection direction,
+                                          BitVector::Kind kind,
+                                          std::size_t bitWidth);
 };
 
 struct Context final
@@ -115,10 +130,10 @@ struct Context final
     TypePool typePool;
 };
 
-#define AST_NODE_DECLARE_VISITOR()                              \
-public:                                                         \
-    virtual VisitStatus visit(Visitor &visitor) override final; \
-    virtual VisitStatus visit(ConstVisitor &visitor) const override final;
+#define AST_NODE_DECLARE_VISITOR()                        \
+public:                                                   \
+    virtual VisitStatus visit(Visitor &visitor) override; \
+    virtual VisitStatus visit(ConstVisitor &visitor) const override;
 
 struct SymbolTable;
 
@@ -225,43 +240,106 @@ struct Module final : public Node, public Symbol, public SymbolScope
     AST_NODE_DECLARE_VISITOR()
 };
 
+struct BitVectorTypeBuiltinAlias
+{
+    TokenType name;
+    BitVector::Kind kind;
+    std::size_t bitWidth;
+    constexpr BitVectorTypeBuiltinAlias(TokenType name,
+                                        BitVector::Kind kind,
+                                        std::size_t bitWidth) noexcept : name(name),
+                                                                         kind(kind),
+                                                                         bitWidth(bitWidth)
+    {
+    }
+};
+
 class BitVectorType final : public Type
 {
     friend class TypePool;
 
-public:
-    BitVector::Kind kind;
-    std::size_t bitWidth;
-
 private:
-    struct PrivateConstructTag
+    struct PrivateAccessTag
     {
         friend class TypePool;
 
     private:
-        PrivateConstructTag() = default;
+        constexpr PrivateAccessTag() = default;
     };
 
 public:
-    BitVectorType(BitVector::Kind kind, std::size_t bitWidth, PrivateConstructTag)
-        : Type({}), kind(kind), bitWidth(bitWidth)
+    using Direction = BitVectorTypeDirection;
+    static constexpr Direction flipDirection(Direction v) noexcept
     {
+        switch(v)
+        {
+        case Direction::Input:
+            return Direction::Output;
+        case Direction::Output:
+            return Direction::Input;
+        default:
+            return v;
+        }
+    }
+    static constexpr util::string_view getDirectionName(Direction v) noexcept
+    {
+        using namespace util::string_view_literals;
+        switch(v)
+        {
+        case Direction::Input:
+            return "input"_sv;
+        case Direction::Output:
+            return "output"_sv;
+        case Direction::Reg:
+            return "reg"_sv;
+        }
+        assert(v == Direction::Input);
+        return ""_sv;
+    }
+    static constexpr bool isStatelessDirection(Direction v) noexcept
+    {
+        switch(v)
+        {
+        case Direction::Input:
+        case Direction::Output:
+            return false;
+        case Direction::Reg:
+            return true;
+        }
+        assert(v == Direction::Input);
+        return true;
     }
 
 public:
-    struct BuiltinAlias
+    Direction direction;
+    BitVector::Kind kind;
+    std::size_t bitWidth;
+
+private:
+    BitVectorType *flippedType;
+
+public:
+    BitVectorType(Direction direction,
+                  BitVector::Kind kind,
+                  std::size_t bitWidth,
+                  BitVectorType *flippedType,
+                  PrivateAccessTag)
+        : Type({}, isStatelessDirection(direction)),
+          direction(),
+          kind(kind),
+          bitWidth(bitWidth),
+          flippedType(flippedType)
     {
-        util::string_view name;
-        BitVector::Kind kind;
-        std::size_t bitWidth;
-        constexpr BuiltinAlias(util::string_view name,
-                               BitVector::Kind kind,
-                               std::size_t bitWidth) noexcept : name(name),
-                                                                kind(kind),
-                                                                bitWidth(bitWidth)
-        {
-        }
-    };
+        if(flippedType)
+            flippedType->flippedType = this;
+    }
+    virtual const Type *getFlippedType() const noexcept override
+    {
+        return flippedType;
+    }
+
+public:
+    using BuiltinAlias = BitVectorTypeBuiltinAlias;
     class BuiltinAliases
     {
     public:
@@ -295,15 +373,15 @@ public:
     {
         using namespace util::string_view_literals;
         static constexpr BuiltinAlias builtinAliases[] = {
-            BuiltinAlias("bit"_sv, BitVector::Kind::Unsigned, 1),
-            BuiltinAlias("u8"_sv, BitVector::Kind::Unsigned, 8),
-            BuiltinAlias("u16"_sv, BitVector::Kind::Unsigned, 16),
-            BuiltinAlias("u32"_sv, BitVector::Kind::Unsigned, 32),
-            BuiltinAlias("u64"_sv, BitVector::Kind::Unsigned, 64),
-            BuiltinAlias("s8"_sv, BitVector::Kind::Signed, 8),
-            BuiltinAlias("s16"_sv, BitVector::Kind::Signed, 16),
-            BuiltinAlias("s32"_sv, BitVector::Kind::Signed, 32),
-            BuiltinAlias("s64"_sv, BitVector::Kind::Signed, 64),
+            BuiltinAlias(TokenType::Bit, BitVector::Kind::Unsigned, 1),
+            BuiltinAlias(TokenType::U8, BitVector::Kind::Unsigned, 8),
+            BuiltinAlias(TokenType::U16, BitVector::Kind::Unsigned, 16),
+            BuiltinAlias(TokenType::U32, BitVector::Kind::Unsigned, 32),
+            BuiltinAlias(TokenType::U64, BitVector::Kind::Unsigned, 64),
+            BuiltinAlias(TokenType::S8, BitVector::Kind::Signed, 8),
+            BuiltinAlias(TokenType::S16, BitVector::Kind::Signed, 16),
+            BuiltinAlias(TokenType::S32, BitVector::Kind::Signed, 32),
+            BuiltinAlias(TokenType::S64, BitVector::Kind::Signed, 64),
         };
         return BuiltinAliases(builtinAliases);
     }
@@ -322,25 +400,110 @@ struct TransparentTypeAlias final : public Type, public Symbol
           aliasedType(aliasedType)
     {
     }
+    virtual const Type *getFlippedType() const noexcept override
+    {
+        return aliasedType->getFlippedType();
+    }
     AST_NODE_DECLARE_VISITOR()
 };
 
-struct Bundle final : public Type, public Symbol, public SymbolScope
+struct Variable final : public Node, public Symbol
 {
-    std::vector<Node *> members;
-    Bundle(LocationRange locationRange,
-           LocationRange nameLocation,
-           StringPool::Entry name,
-           SymbolLookupChain symbolLookupChain,
-           SymbolTable *symbolTable)
-        : Type(locationRange),
-          Symbol(nameLocation, name),
-          SymbolScope(symbolLookupChain, symbolTable),
-          members()
+    const Type *type;
+    Variable(LocationRange locationRange,
+             LocationRange nameLocation,
+             StringPool::Entry name,
+             const Type *type)
+        : Node(locationRange), Symbol(nameLocation, name), type(type)
     {
     }
     AST_NODE_DECLARE_VISITOR()
 };
+
+class Bundle;
+
+class FlippedBundle final : public Type
+{
+    friend class Bundle;
+
+private:
+    Bundle *const flippedType;
+
+private:
+    struct PrivateAccessTag
+    {
+    private:
+        PrivateAccessTag() = default;
+    };
+
+public:
+    FlippedBundle(PrivateAccessTag, LocationRange locationRange, Bundle *flippedType)
+        : Type(locationRange, true), flippedType(flippedType)
+    {
+    }
+    virtual const Type *getFlippedType() const noexcept override;
+    AST_NODE_DECLARE_VISITOR()
+};
+
+class Bundle final : public Type, public Symbol, public SymbolScope
+{
+    friend class FlippedBundle;
+
+private:
+    std::vector<Variable *> members{};
+    FlippedBundle *flippedType;
+    bool defined = false;
+
+public:
+    Bundle(LocationRange locationRange,
+           LocationRange nameLocation,
+           StringPool::Entry name,
+           SymbolLookupChain symbolLookupChain,
+           SymbolTable *symbolTable,
+           Context &context)
+        : Type(locationRange, true),
+          Symbol(nameLocation, name),
+          SymbolScope(symbolLookupChain, symbolTable),
+          flippedType(context.arena.create<FlippedBundle>(
+              FlippedBundle::PrivateAccessTag{}, locationRange, this))
+    {
+    }
+    bool isDefined() const noexcept
+    {
+        return defined;
+    }
+    const std::vector<Variable *> &getMembers() const noexcept
+    {
+        assert(defined);
+        return members;
+    }
+    void define(std::vector<Variable *> newMembers) noexcept
+    {
+        assert(!defined);
+        defined = true;
+        members.swap(newMembers);
+        isStateless = true;
+        for(auto *member : members)
+        {
+            if(!member->type->isStateless)
+            {
+                isStateless = false;
+                break;
+            }
+        }
+        flippedType->isStateless = isStateless;
+    }
+    virtual const Type *getFlippedType() const noexcept override
+    {
+        return flippedType;
+    }
+    AST_NODE_DECLARE_VISITOR()
+};
+
+inline const Type *FlippedBundle::getFlippedType() const noexcept
+{
+    return flippedType;
+}
 
 #undef AST_NODE_DECLARE_VISITOR
 #define AST_NODE_DECLARE_VISIT_FUNCTION(T) virtual VisitStatus visit(const T *node) = 0;
@@ -350,6 +513,8 @@ struct ConstVisitor
     virtual ~ConstVisitor() = default;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
     AST_NODE_DECLARE_VISIT_FUNCTION(TransparentTypeAlias)
+    AST_NODE_DECLARE_VISIT_FUNCTION(Variable)
+    AST_NODE_DECLARE_VISIT_FUNCTION(FlippedBundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };
@@ -366,6 +531,8 @@ struct Visitor : public ConstVisitor
     using ConstVisitor::visit;
     AST_NODE_DECLARE_VISIT_FUNCTION(Module)
     AST_NODE_DECLARE_VISIT_FUNCTION(TransparentTypeAlias)
+    AST_NODE_DECLARE_VISIT_FUNCTION(Variable)
+    AST_NODE_DECLARE_VISIT_FUNCTION(FlippedBundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(Bundle)
     AST_NODE_DECLARE_VISIT_FUNCTION(BitVectorType)
 };

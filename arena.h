@@ -20,41 +20,27 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <deque>
 #include <utility>
 
 class Arena
 {
 private:
-    struct ObjectBase
-    {
-        virtual ~ObjectBase() = default;
-    };
-    struct ConstructObjectTag
-    {
-        explicit ConstructObjectTag() = default;
-    };
-    template <typename T>
-    struct Object final : public ObjectBase
-    {
-        T value;
-        template <typename... Args>
-        Object(ConstructObjectTag, Args &&... args)
-            : value(std::forward<Args>(args)...)
-        {
-        }
-    };
-    std::vector<std::unique_ptr<ObjectBase>> objects;
+    std::deque<std::unique_ptr<void, void (*)(void *object)>> objects;
 
 public:
     template <typename T, typename... Args>
-    T *create(Args &&... args)
+    decltype(new T(std::declval<Args>()...)) create(Args &&... args)
     {
-        objects.emplace_back();
-        std::unique_ptr<Object<T>> object(
-            new Object<T>(ConstructObjectTag{}, std::forward<Args>(args)...));
-        T *retval = std::addressof(object->value);
-        objects.back() = std::move(object);
+        objects.emplace_back(nullptr,
+                             [](void *object) noexcept
+                             {
+                                 delete static_cast<T *>(object);
+                             });
+        auto &objectSlot = objects.back();
+        std::unique_ptr<T> object(new T(std::forward<Args>(args)...));
+        T *retval = object.get();
+        objectSlot.reset(const_cast<void *>(static_cast<const void *>(object.release())));
         return retval;
     }
 };
