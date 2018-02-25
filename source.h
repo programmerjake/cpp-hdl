@@ -68,6 +68,7 @@ public:
         return sourceText;
     }
     virtual void writeLocation(std::ostream &os, std::size_t offset) const = 0;
+    virtual util::string_view getFileName() const noexcept = 0;
 
 private:
     class NullSource;

@@ -32,6 +32,11 @@ public:
     {
     }
     virtual void writeLocation(std::ostream &os, std::size_t offset) const override;
+    virtual util::string_view getFileName() const noexcept override
+    {
+        using namespace util::string_view_literals;
+        return "<nullptr>"_sv;
+    }
 };
 
 void Source::NullSource::writeLocation(std::ostream &os, std::size_t offset) const
@@ -99,6 +104,10 @@ private:
         return tabSize == 0 || columnBeforeTab == 0 ?
                    columnBeforeTab + 1 :
                    columnBeforeTab + (tabSize - (columnBeforeTab - 1) % tabSize);
+    }
+    virtual util::string_view getFileName() const noexcept override
+    {
+        return fileName;
     }
 };
 

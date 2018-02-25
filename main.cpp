@@ -18,11 +18,13 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include "tokenizer.h"
 #include "string_view.h"
 #include "parse_error.h"
 #include "bit_vector.h"
 #include "parser.h"
+#include "output_generator.h"
 
 int main(int argc, char **argv)
 {
@@ -36,7 +38,19 @@ int main(int argc, char **argv)
         auto source = Source::makeSourceFromFile(argv[1]);
         ast::Context context;
         auto module = Parser::parseTopLevelModule(Tokenizer(source.get()), context);
-        module->dump();
+        module->dump(std::cerr);
+        std::cerr << std::endl;
+        for(auto &outputGeneratorCreator : outputGeneratorCreators)
+        {
+            std::string outputFileName = argv[1];
+            outputFileName += '.';
+            outputFileName += outputGeneratorCreator.outputFileExtension;
+            std::ofstream os(outputFileName);
+            os.exceptions(std::ios::badbit | std::ios::failbit);
+            auto params = outputGeneratorCreator.createParams();
+            params->outputStream = &os;
+            outputGeneratorCreator.create(std::move(params))->run(module);
+        }
     }
     catch(ParseError &e)
     {

@@ -24,7 +24,6 @@ namespace ast
 {
 struct DumpVisitor final : public ConstVisitor
 {
-    std::size_t indentLevel = 0;
     std::ostream &os;
     struct Indent
     {

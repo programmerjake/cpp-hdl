@@ -17,32 +17,15 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module main
+#include "output_generator.h"
+#include "verilog_output_generator.h"
+
+std::pair<const OutputGeneratorCreator *, std::size_t>
+    OutputGeneratorCreators::getOutputGeneratorCreators() noexcept
 {
-    module submodule1
-    {
-        bundle bundle1
-        {
-            a : input bit;
-            b : output u64;
-            c : input uint(65536);
-        }
-        module a
-        {
-        }
-    }
-    module submodule2
-    {
-        module a
-        {
-        }
-        module config // test Verilog keywords
-        {
-        }
-    }
-    bundle bundle2
-    {
-        b1, b2 : submodule1::bundle1;
-        b3 : !submodule1::bundle1;
-    }
+    using namespace util::string_view_literals;
+    static constexpr std::initializer_list<OutputGeneratorCreator> outputGeneratorCreators = {
+        {"verilog"_sv, "v"_sv, VerilogOutputGenerator::create, VerilogOutputGenerator::createParams},
+    };
+    return {outputGeneratorCreators.begin(), outputGeneratorCreators.size()};
 }
