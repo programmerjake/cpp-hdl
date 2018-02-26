@@ -223,6 +223,20 @@ struct SymbolScope
     }
 };
 
+struct Interface : public Node, public SymbolScope
+{
+};
+
+struct NamedInterface final: public Interface, public Symbol
+{
+    AST_NODE_DECLARE_VISITOR()
+};
+
+struct AnonymousInterface final: public Interface, public Symbol
+{
+    AST_NODE_DECLARE_VISITOR()
+};
+
 struct Module final : public Node, public Symbol, public SymbolScope
 {
     std::vector<Node *> members;

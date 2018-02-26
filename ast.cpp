@@ -249,7 +249,7 @@ VisitStatus DumpVisitor::visit(const BitVectorType *node)
         os << "sint";
         break;
     }
-    os << "(" << node->bitWidth << ")\n";
+    os << "<" << node->bitWidth << ">\n";
     return VisitStatus::Continue;
 }
 

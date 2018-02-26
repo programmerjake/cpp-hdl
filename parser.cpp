@@ -207,7 +207,7 @@ const ast::Type *Parser::parseType()
         }
         if(!foundBuiltinAlias)
         {
-            matchToken(TokenType::LParen, "expected '('");
+            matchToken(TokenType::LAngle, "expected '<'");
             auto bitWidthToken =
                 matchToken(TokenType::UnprefixedDecimalLiteralInteger, "expected bit vector width");
             auto bitWidthGMPInteger = bitWidthToken.getValue();
@@ -217,7 +217,7 @@ const ast::Type *Parser::parseType()
             if(mpz_cmp_ui(bitWidthGMPInteger.value, BitVector::maxBitCount()) > 0)
                 throw ParseError(bitWidthToken.locationRange.begin(), "bit vector is too wide");
             bitWidth = mpz_get_ui(bitWidthGMPInteger);
-            matchToken(TokenType::RParen, "expected ')'");
+            matchToken(TokenType::RAngle, "expected '>'");
         }
         return context.typePool.getBitVectorType(direction, kind, bitWidth);
     }

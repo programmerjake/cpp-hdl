@@ -25,7 +25,7 @@ module main
         {
             a : input bit;
             b : output u64;
-            c : input uint(65536);
+            c : input uint<65536>;
         }
         module a
         {
