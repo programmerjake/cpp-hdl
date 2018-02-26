@@ -19,18 +19,22 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "../source.h"
+#include "visitor_forward.h"
+#include <iosfwd>
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
+struct Node
+{
+    LocationRange locationRange;
+    explicit Node(LocationRange locationRange) : locationRange(locationRange)
     {
     }
+    virtual ~Node() = default;
+    virtual VisitStatus visit(Visitor &visitor) = 0;
+    virtual VisitStatus visit(ConstVisitor &visitor) const = 0;
+    void dump(std::ostream &os) const;
+    void dump() const;
 };
+}

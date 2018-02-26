@@ -19,18 +19,15 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "visitor_forward.h"
+#include <memory>
+#include <iostream>
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
-    {
-    }
-};
+struct DumpVisitor;
+
+std::unique_ptr<ConstVisitor> makeDumpVisitor(std::ostream &os = std::cerr);
+}
+
+

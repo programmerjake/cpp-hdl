@@ -19,18 +19,31 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "type.h"
+#include "symbol.h"
+#include "../source.h"
+#include "../util/string_pool.h"
+#include "ast_macros.h"
 
-class ParseError : public std::runtime_error
+namespace ast
+{
+class TransparentTypeAlias final : public Type, public Symbol
 {
 public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
+    const Type *aliasedType;
+    TransparentTypeAlias(LocationRange locationRange,
+                         LocationRange nameLocation,
+                         util::StringPool::Entry name,
+                         const Type *aliasedType)
+        : Type(locationRange, aliasedType->canonicalType),
+          Symbol(nameLocation, name),
+          aliasedType(aliasedType)
     {
     }
+    virtual const Type *getFlippedType() const noexcept override
+    {
+        return aliasedType->getFlippedType();
+    }
+    AST_NODE_DECLARE_VISITOR()
 };
+}

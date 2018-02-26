@@ -28,8 +28,10 @@
 #include <cassert>
 #include <ostream>
 #include <limits>
-#include "string_view.h"
+#include "../util/string_view.h"
 
+namespace math
+{
 struct GMPInteger
 {
     mpz_t value;
@@ -126,7 +128,8 @@ struct GMPInteger
         {
             baseIndicator = baseIndicatorLower;
         }
-        std::unique_ptr<char[]> buffer(new char[mpz_sizeinbase(value, base) + 2 + baseIndicator.size()]);
+        std::unique_ptr<char[]> buffer(
+            new char[mpz_sizeinbase(value, base) + 2 + baseIndicator.size()]);
         for(std::size_t i = 0; i < baseIndicator.size(); i++)
             buffer[i] = baseIndicator[i];
         mpz_get_str(buffer.get() + baseIndicator.size(), base, value);
@@ -278,3 +281,4 @@ public:
         return mpz_cmp(l.value, r.value);
     }
 };
+}

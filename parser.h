@@ -19,11 +19,16 @@
 
 #pragma once
 
-#include "ast.h"
-#include "arena.h"
+#include "ast/context.h"
+#include "ast/symbol_lookup_chain.h"
+#include "ast/symbol_table.h"
+#include "ast/module.h"
+#include "ast/bundle.h"
+#include "ast/variable.h"
+#include "util/arena.h"
 #include "tokenizer.h"
 #include "parse_error.h"
-#include "string_view.h"
+#include "util/string_view.h"
 
 class Parser final
 {

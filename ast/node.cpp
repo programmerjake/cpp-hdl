@@ -17,20 +17,20 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "node.h"
+#include "visitor.h"
+#include "dump_visitor.h"
+#include <iostream>
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
-
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
-    {
-    }
-};
+void Node::dump(std::ostream &os) const
+{
+    visit(*makeDumpVisitor(os));
+}
+
+void Node::dump() const
+{
+    dump(std::cerr);
+}
+}

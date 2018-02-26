@@ -18,6 +18,7 @@
  */
 
 #include "parser.h"
+#include "ast/bit_vector_type.h"
 
 ast::Module *Parser::parseModule()
 {
@@ -167,7 +168,7 @@ const ast::Type *Parser::parseType()
        || peek().type == TokenType::Reg)
     {
         using Direction = ast::BitVectorType::Direction;
-        using Kind = BitVector::Kind;
+        using Kind = math::BitVector::Kind;
         auto directionToken = get();
         auto direction = Direction::Reg;
         if(directionToken.type == TokenType::Input)
@@ -214,7 +215,7 @@ const ast::Type *Parser::parseType()
             if(mpz_cmp_ui(bitWidthGMPInteger.value, 1) < 0)
                 throw ParseError(bitWidthToken.locationRange.begin(),
                                  "bit vector must be non-zero width");
-            if(mpz_cmp_ui(bitWidthGMPInteger.value, BitVector::maxBitCount()) > 0)
+            if(mpz_cmp_ui(bitWidthGMPInteger.value, math::BitVector::maxBitCount()) > 0)
                 throw ParseError(bitWidthToken.locationRange.begin(), "bit vector is too wide");
             bitWidth = mpz_get_ui(bitWidthGMPInteger);
             matchToken(TokenType::RAngle, "expected '>'");

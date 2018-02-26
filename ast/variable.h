@@ -19,18 +19,26 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "node.h"
+#include "symbol.h"
+#include "type.h"
+#include "../source.h"
+#include "../util/string_pool.h"
+#include "ast_macros.h"
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
+struct Variable final : public Node, public Symbol
+{
+    const Type *type;
+    Variable(LocationRange locationRange,
+             LocationRange nameLocation,
+             util::StringPool::Entry name,
+             const Type *type)
+        : Node(locationRange), Symbol(nameLocation, name), type(type)
     {
     }
+    AST_NODE_DECLARE_VISITOR()
 };
+}
+

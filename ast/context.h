@@ -19,18 +19,17 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "../util/string_pool.h"
+#include "../util/arena.h"
+#include "type_pool.h"
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
-    {
-    }
+struct Context final
+{
+    util::StringPool stringPool;
+    util::Arena arena;
+    TypePool typePool;
 };
+}
+

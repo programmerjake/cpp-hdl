@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include "ast.h"
-#include <memory>
-#include <tuple>
 #include <iostream>
-#include "string_view.h"
+#include "ast/module.h"
+#include <memory>
+#include "util/string_view.h"
+#include <tuple>
 
 class OutputGenerator
 {

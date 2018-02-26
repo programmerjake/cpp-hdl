@@ -19,11 +19,11 @@
 
 #pragma once
 
+#include "util/string_view.h"
+#include <iosfwd>
 #include <memory>
 #include <string>
-#include <iosfwd>
 #include <cassert>
-#include "string_view.h"
 
 class Source
 {

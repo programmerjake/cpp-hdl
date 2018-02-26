@@ -19,18 +19,22 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "../source.h"
+#include "../util/string_pool.h"
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
+struct SymbolTable;
+
+struct Symbol
+{
+    virtual ~Symbol() = default;
+    LocationRange nameLocation;
+    const util::StringPool::Entry name;
+    SymbolTable *containingSymbolTable;
+    explicit Symbol(LocationRange nameLocation, util::StringPool::Entry name)
+        : nameLocation(nameLocation), name(name), containingSymbolTable()
     {
     }
 };
+}

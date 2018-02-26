@@ -20,9 +20,9 @@
 #include <iostream>
 #include <fstream>
 #include "tokenizer.h"
-#include "string_view.h"
+#include "util/string_view.h"
 #include "parse_error.h"
-#include "bit_vector.h"
+#include "math/bit_vector.h"
 #include "parser.h"
 #include "output_generator.h"
 

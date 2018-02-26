@@ -19,11 +19,10 @@
 
 #pragma once
 
-#include "source.h"
-#include <cassert>
-#include "string_view.h"
 #include <cstdint>
-#include "bit_vector.h"
+#include "util/string_view.h"
+#include "source.h"
+#include "math/bit_vector.h"
 
 enum class TokenType : std::uint_fast8_t
 {
@@ -215,7 +214,7 @@ struct Token final
                                                                        locationRange(locationRange)
     {
     }
-    GMPInteger getValue() const;
+    math::GMPInteger getValue() const;
     static constexpr bool isComment(Type type) noexcept
     {
         switch(type)
@@ -235,7 +234,7 @@ struct Token final
 
 class Tokenizer final
 {
-    friend GMPInteger Token::getValue() const;
+    friend math::GMPInteger Token::getValue() const;
 
 private:
     struct TokenParser;

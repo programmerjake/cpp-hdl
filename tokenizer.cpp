@@ -337,7 +337,7 @@ struct Tokenizer::TokenParser
     }
 };
 
-GMPInteger Token::getValue() const
+math::GMPInteger Token::getValue() const
 {
     util::string_view text = getText();
     int base = 10;
@@ -366,7 +366,7 @@ GMPInteger Token::getValue() const
         assert(false);
         return {};
     }
-    GMPInteger value(0UL);
+    math::GMPInteger value(0UL);
     for(unsigned char ch : text)
     {
         int digitValue = Tokenizer::TokenParser::getDigitValue(ch, base);

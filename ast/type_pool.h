@@ -19,28 +19,26 @@
 
 #pragma once
 
-#include <memory>
-#include <deque>
-#include <utility>
+#include "../util/arena.h"
+#include <unordered_map>
+#include <type_traits>
+#include "../math/bit_vector.h"
+#include "bit_vector_type_forward.h"
 
-class Arena
+namespace ast
+{
+class TypePool final
 {
 private:
-    std::deque<std::unique_ptr<void, void (*)(void *object)>> objects;
+    util::Arena typeArena;
+    std::unordered_map<std::underlying_type_t<BitVectorTypeDirection>,
+                       std::unordered_map<std::underlying_type_t<math::BitVector::Kind>,
+                                          std::unordered_map<std::size_t, BitVectorType *>>>
+        bitVectorTypes;
 
 public:
-    template <typename T, typename... Args>
-    decltype(new T(std::declval<Args>()...)) create(Args &&... args)
-    {
-        objects.emplace_back(nullptr,
-                             [](void *object) noexcept
-                             {
-                                 delete static_cast<T *>(object);
-                             });
-        auto &objectSlot = objects.back();
-        std::unique_ptr<T> object(new T(std::forward<Args>(args)...));
-        T *retval = object.get();
-        objectSlot.reset(const_cast<void *>(static_cast<const void *>(object.release())));
-        return retval;
-    }
+    const BitVectorType *getBitVectorType(BitVectorTypeDirection direction,
+                                          math::BitVector::Kind kind,
+                                          std::size_t bitWidth);
 };
+}

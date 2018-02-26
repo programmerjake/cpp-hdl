@@ -17,8 +17,20 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ast.h"
+#include "dump_visitor.h"
+#include "visitor.h"
+#include <ostream>
+#include <unordered_map>
+#include "symbol_table.h"
+#include "node.h"
+#include "symbol_lookup_chain.h"
 #include <deque>
+#include "module.h"
+#include "transparent_type_alias.h"
+#include "variable.h"
+#include "bundle.h"
+#include "bit_vector_type.h"
+#include "interface.h"
 
 namespace ast
 {
@@ -95,56 +107,10 @@ struct DumpVisitor final : public ConstVisitor
             visit(symbolTable);
     }
     VisitStatus visit(const Bundle *node, bool isFlipped);
-    virtual VisitStatus visit(const Module *node) override;
-    virtual VisitStatus visit(const TransparentTypeAlias *node) override;
-    virtual VisitStatus visit(const Variable *node) override;
-    virtual VisitStatus visit(const FlippedBundle *node) override;
-    virtual VisitStatus visit(const Bundle *node) override;
-    virtual VisitStatus visit(const BitVectorType *node) override;
+#define AST_DUMP_VISITOR_DECLARE_VISIT(T) virtual VisitStatus visit(const T *node) override;
+    AST_VISITOR_NODE_LIST(AST_DUMP_VISITOR_DECLARE_VISIT)
+#undef AST_DUMP_VISITOR_DECLARE_VISIT
 };
-
-#define AST_NODE_IMPLEMENT_VISITOR(T)                 \
-    VisitStatus T::visit(Visitor &visitor)            \
-    {                                                 \
-        return visitor.visit(this);                   \
-    }                                                 \
-    VisitStatus T::visit(ConstVisitor &visitor) const \
-    {                                                 \
-        return visitor.visit(this);                   \
-    }
-
-const BitVectorType *TypePool::getBitVectorType(BitVectorType::Direction direction,
-                                                BitVector::Kind kind,
-                                                std::size_t bitWidth)
-{
-    auto &retval = bitVectorTypes[static_cast<std::underlying_type_t<BitVectorType::Direction>>(
-        direction)][static_cast<std::underlying_type_t<BitVector::Kind>>(kind)][bitWidth];
-    if(!retval)
-    {
-        auto flippedDirection = BitVectorType::flipDirection(direction);
-        assert(BitVectorType::flipDirection(flippedDirection) == direction);
-        retval = typeArena.create<BitVectorType>(
-            direction, kind, bitWidth, nullptr, BitVectorType::PrivateAccessTag{});
-        auto &flippedType =
-            bitVectorTypes[static_cast<std::underlying_type_t<BitVectorType::Direction>>(
-                flippedDirection)][static_cast<std::underlying_type_t<BitVector::Kind>>(kind)]
-                          [bitWidth];
-        if(!flippedType)
-            flippedType = typeArena.create<BitVectorType>(
-                flippedDirection, kind, bitWidth, nullptr, BitVectorType::PrivateAccessTag{});
-        flippedType->flippedType = retval;
-        retval->flippedType = flippedType;
-    }
-    return retval;
-}
-
-SymbolTable *SymbolTable::createGlobalSymbolTable(ast::Context &context)
-{
-    auto *retval = context.arena.create<SymbolTable>();
-    return retval;
-}
-
-AST_NODE_IMPLEMENT_VISITOR(Module)
 
 VisitStatus DumpVisitor::visit(const Module *node)
 {
@@ -160,8 +126,6 @@ VisitStatus DumpVisitor::visit(const Module *node)
     return VisitStatus::Continue;
 }
 
-AST_NODE_IMPLEMENT_VISITOR(TransparentTypeAlias)
-
 VisitStatus DumpVisitor::visit(const TransparentTypeAlias *node)
 {
     os << indent << "TransparentTypeAlias " << *node->name << " ";
@@ -173,8 +137,6 @@ VisitStatus DumpVisitor::visit(const TransparentTypeAlias *node)
     node->aliasedType->visit(*this);
     return VisitStatus::Continue;
 }
-
-AST_NODE_IMPLEMENT_VISITOR(Variable)
 
 VisitStatus DumpVisitor::visit(const Variable *node)
 {
@@ -188,16 +150,12 @@ VisitStatus DumpVisitor::visit(const Variable *node)
     return VisitStatus::Continue;
 }
 
-AST_NODE_IMPLEMENT_VISITOR(FlippedBundle)
-
 VisitStatus DumpVisitor::visit(const FlippedBundle *node)
 {
     auto *flippedType = node->getFlippedType();
     assert(dynamic_cast<const Bundle *>(flippedType));
     return visit(static_cast<const Bundle *>(flippedType), true);
 }
-
-AST_NODE_IMPLEMENT_VISITOR(Bundle)
 
 VisitStatus DumpVisitor::visit(const Bundle *node, bool isFlipped)
 {
@@ -224,8 +182,6 @@ VisitStatus DumpVisitor::visit(const Bundle *node)
     return visit(node, false);
 }
 
-AST_NODE_IMPLEMENT_VISITOR(BitVectorType)
-
 VisitStatus DumpVisitor::visit(const BitVectorType *node)
 {
     os << indent << BitVectorType::getDirectionName(node->direction) << " ";
@@ -242,14 +198,40 @@ VisitStatus DumpVisitor::visit(const BitVectorType *node)
         os << name << ": ";
     switch(node->kind)
     {
-    case BitVector::Kind::Unsigned:
+    case math::BitVector::Kind::Unsigned:
         os << "uint";
         break;
-    case BitVector::Kind::Signed:
+    case math::BitVector::Kind::Signed:
         os << "sint";
         break;
     }
     os << "<" << node->bitWidth << ">\n";
+    return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const NamedInterface *node)
+{
+    os << indent << "interface " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    visit(node->symbolLookupChain);
+    // TODO: finish
+    return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const AnonymousInterface *node)
+{
+    os << indent << "interface ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    visit(node->symbolLookupChain);
+    // TODO: finish
     return VisitStatus::Continue;
 }
 

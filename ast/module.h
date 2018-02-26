@@ -19,18 +19,34 @@
 
 #pragma once
 
-#include "source.h"
-#include <stdexcept>
-#include <string>
-#include "util/string_view.h"
+#include "node.h"
+#include "symbol.h"
+#include "symbol_scope.h"
+#include <vector>
+#include "../source.h"
+#include "../util/string_pool.h"
+#include "symbol_lookup_chain.h"
+#include "symbol_table.h"
+#include "ast_macros.h"
 
-class ParseError : public std::runtime_error
+namespace ast
 {
-public:
-    Location errorLocation;
-    static std::string makeErrorMessage(Location errorLocation, util::string_view message);
-    ParseError(Location errorLocation, util::string_view message)
-        : runtime_error(makeErrorMessage(errorLocation, message)), errorLocation(errorLocation)
+struct Module final : public Node, public Symbol, public SymbolScope
+{
+    std::vector<Node *> members;
+    Module(LocationRange locationRange,
+           LocationRange nameLocation,
+           util::StringPool::Entry name,
+           SymbolLookupChain symbolLookupChain,
+           SymbolTable *symbolTable)
+        : Node(locationRange),
+          Symbol(nameLocation, name),
+          SymbolScope(symbolLookupChain, symbolTable),
+          members()
     {
     }
+    AST_NODE_DECLARE_VISITOR()
 };
+}
+
+
