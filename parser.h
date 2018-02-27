@@ -29,6 +29,7 @@
 #include "tokenizer.h"
 #include "parse_error.h"
 #include "util/string_view.h"
+#include "ast/template_parameter.h"
 
 class Parser final
 {
@@ -79,7 +80,10 @@ private:
     };
 
 private:
-    Parser(Tokenizer tokenizer, ast::Context &context) : tokenizer(tokenizer), context(context), globalSymbolTable(ast::SymbolTable::createGlobalSymbolTable(context))
+    Parser(Tokenizer tokenizer, ast::Context &context)
+        : tokenizer(tokenizer),
+          context(context),
+          globalSymbolTable(ast::SymbolTable::createGlobalSymbolTable(context))
     {
     }
 
@@ -113,11 +117,12 @@ private:
     }
 
 private:
-    ast::Module *parseModule();
+    ast::GenericModule *parseModule(bool isTopLevel = false);
     ast::Bundle *parseBundle();
     std::vector<ast::Variable *> parseVariables();
-    const ast::Type *parseType();
+    std::pair<const ast::Type *, LocationRange> parseType();
     std::pair<ast::Symbol *, Token> parseScopedName();
+    std::vector<const ast::TemplateParameter *> parseTemplateParameters();
 
 private:
     ast::Module *parseTopLevelModule();

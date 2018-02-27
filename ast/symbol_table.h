@@ -27,8 +27,9 @@
 
 namespace ast
 {
-struct SymbolTable
+class SymbolTable
 {
+public:
     std::unordered_map<util::StringPool::Entry, Symbol *> localSymbolsMap = {};
     std::vector<Symbol *> localSymbolsList = {};
     SymbolTable()

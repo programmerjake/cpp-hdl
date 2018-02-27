@@ -17,26 +17,11 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "node.h"
-#include "symbol_scope.h"
+#include "module_template_parameter_kind.h"
 #include "ast_macros.h"
+#include "visitor.h"
 
 namespace ast
 {
-struct Interface : public Node, public SymbolScope
-{
-};
-
-struct NamedInterface final: public Interface, public Symbol
-{
-    AST_NODE_DECLARE_VISITOR()
-};
-
-struct AnonymousInterface final: public Interface, public Symbol
-{
-    AST_NODE_DECLARE_VISITOR()
-};
+AST_NODE_IMPLEMENT_VISITOR(ModuleTemplateParameterKind)
 }
-

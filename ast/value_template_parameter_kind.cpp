@@ -17,15 +17,11 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "interface.h"
+#include "value_template_parameter_kind.h"
 #include "ast_macros.h"
 #include "visitor.h"
 
 namespace ast
 {
-AST_NODE_IMPLEMENT_VISITOR(NamedInterface)
-AST_NODE_IMPLEMENT_VISITOR(AnonymousInterface)
+AST_NODE_IMPLEMENT_VISITOR(ValueTemplateParameterKind)
 }
-
-
-

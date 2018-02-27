@@ -30,7 +30,12 @@
 #include "variable.h"
 #include "bundle.h"
 #include "bit_vector_type.h"
-#include "interface.h"
+#include "module_template.h"
+#include "module_template_argument.h"
+#include "module_template_parameter_kind.h"
+#include "value_template_argument.h"
+#include "value_template_parameter_kind.h"
+#include <sstream>
 
 namespace ast
 {
@@ -107,12 +112,21 @@ struct DumpVisitor final : public ConstVisitor
             visit(symbolTable);
     }
     VisitStatus visit(const Bundle *node, bool isFlipped);
+    VisitStatus visit(const GenericModule *node);
+    VisitStatus visit(const TemplateImplementation *node)
+    {
+        os << indent << "TemplateImplementation\n";
+        PushIndent pushIndent(this);
+        for(auto *templateParameter : node->templateParameters)
+            visit(templateParameter);
+        return VisitStatus::Continue;
+    }
 #define AST_DUMP_VISITOR_DECLARE_VISIT(T) virtual VisitStatus visit(const T *node) override;
     AST_VISITOR_NODE_LIST(AST_DUMP_VISITOR_DECLARE_VISIT)
 #undef AST_DUMP_VISITOR_DECLARE_VISIT
 };
 
-VisitStatus DumpVisitor::visit(const Module *node)
+VisitStatus DumpVisitor::visit(const GenericModule *node)
 {
     os << indent << "module " << *node->name << " ";
     bool isFirst = writeObjectNumberAndCheckIfFirst(node);
@@ -120,10 +134,22 @@ VisitStatus DumpVisitor::visit(const Module *node)
     if(!isFirst)
         return VisitStatus::Continue;
     PushIndent pushIndent(this);
+    if(auto *moduleTemplate = dynamic_cast<const ModuleTemplate *>(node))
+        visit(static_cast<const TemplateImplementation *>(moduleTemplate));
     visit(node->symbolLookupChain);
     for(auto *member : node->members)
         member->visit(*this);
     return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const Module *node)
+{
+    return visit(static_cast<const GenericModule *>(node));
+}
+
+VisitStatus DumpVisitor::visit(const ModuleTemplate *node)
+{
+    return visit(static_cast<const GenericModule *>(node));
 }
 
 VisitStatus DumpVisitor::visit(const TransparentTypeAlias *node)
@@ -209,29 +235,73 @@ VisitStatus DumpVisitor::visit(const BitVectorType *node)
     return VisitStatus::Continue;
 }
 
-VisitStatus DumpVisitor::visit(const NamedInterface *node)
+VisitStatus DumpVisitor::visit(const ModuleTemplateArgument *node)
 {
-    os << indent << "interface " << *node->name << " ";
+    os << indent << "ModuleTemplateArgument ";
     bool isFirst = writeObjectNumberAndCheckIfFirst(node);
     os << '\n';
     if(!isFirst)
         return VisitStatus::Continue;
     PushIndent pushIndent(this);
-    visit(node->symbolLookupChain);
-    // TODO: finish
+    node->templateParameterKind->visit(*this);
+    node->value->visit(*this);
     return VisitStatus::Continue;
 }
 
-VisitStatus DumpVisitor::visit(const AnonymousInterface *node)
+VisitStatus DumpVisitor::visit(const ValueTemplateArgument *node)
 {
-    os << indent << "interface ";
+    os << indent << "ValueTemplateArgument ";
     bool isFirst = writeObjectNumberAndCheckIfFirst(node);
     os << '\n';
     if(!isFirst)
         return VisitStatus::Continue;
     PushIndent pushIndent(this);
-    visit(node->symbolLookupChain);
-    // TODO: finish
+    std::ostringstream ss;
+    ss << std::hex << std::uppercase << "value = 0x" << node->value.getValue() << " (" << std::dec << node->value.getValue() << ")";
+    os << indent << ss.str() << "\n";
+    node->templateParameterKind->visit(*this);
+    return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const TemplateParameter *node)
+{
+    os << indent << "TemplateParameter " << *node->name << " ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    node->kind->visit(*this);
+    return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const ModuleTemplateParameterKind *node)
+{
+    os << indent << "ModuleTemplateParameterKind ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    std::ostringstream ss;
+    ss << std::boolalpha << std::nouppercase << "isList = " << node->isList;
+    os << indent << ss.str() << "\n";
+    node->interface->visit(*this);
+    return VisitStatus::Continue;
+}
+
+VisitStatus DumpVisitor::visit(const ValueTemplateParameterKind *node)
+{
+    os << indent << "ValueTemplateParameterKind ";
+    bool isFirst = writeObjectNumberAndCheckIfFirst(node);
+    os << '\n';
+    if(!isFirst)
+        return VisitStatus::Continue;
+    PushIndent pushIndent(this);
+    std::ostringstream ss;
+    ss << std::boolalpha << std::nouppercase << "isList = " << node->isList;
+    os << indent << ss.str() << "\n";
+    node->type->visit(*this);
     return VisitStatus::Continue;
 }
 

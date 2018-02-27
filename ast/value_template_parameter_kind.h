@@ -19,27 +19,35 @@
 
 #pragma once
 
-#include "node.h"
-#include "symbol.h"
+#include "template_parameter_kind.h"
 #include "type.h"
 #include "../source.h"
-#include "../util/string_pool.h"
 #include "ast_macros.h"
 
 namespace ast
 {
-class Variable final : public Node, public Symbol
+class ValueTemplateParameterKind final : public TemplateParameterKind
 {
 public:
     const Type *type;
-    Variable(LocationRange locationRange,
-             LocationRange nameLocation,
-             util::StringPool::Entry name,
-             const Type *type)
-        : Node(locationRange), Symbol(nameLocation, name), type(type)
+    ValueTemplateParameterKind(LocationRange locationRange, bool isList, const Type *type)
+        : TemplateParameterKind(locationRange, isList, Kind::Value), type(type)
     {
+    }
+    virtual std::size_t getHash() const noexcept override
+    {
+        return TemplateParameterKind::getHash() + std::hash<const Type *>()(type);
+    }
+    virtual bool isSame(const TemplateParameterKind &other) const noexcept override
+    {
+        if(auto casted_other = dynamic_cast<const ValueTemplateParameterKind *>(&other))
+            return TemplateParameterKind::isSame(other) && type == casted_other->type;
+        return false;
+    }
+    virtual TemplateParameterKind *duplicate(util::Arena &arena) const override
+    {
+        return arena.create<ValueTemplateParameterKind>(*this);
     }
     AST_NODE_DECLARE_VISITOR()
 };
 }
-

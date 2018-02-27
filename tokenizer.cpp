@@ -322,6 +322,17 @@ struct Tokenizer::TokenParser
             return Token(TokenType::VBar, LocationRange(startLocation, currentLocation));
         case '.':
             get();
+            if(peek() == '.')
+            {
+                auto afterFirstDot = currentLocation;
+                get();
+                if(peek() == '.')
+                {
+                    get();
+                    return Token(TokenType::DotDotDot, LocationRange(startLocation, currentLocation));
+                }
+                currentLocation = afterFirstDot;
+            }
             return Token(TokenType::Dot, LocationRange(startLocation, currentLocation));
         case '<':
             get();

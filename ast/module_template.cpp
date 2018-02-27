@@ -17,17 +17,19 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "module_template.h"
+#include "ast_macros.h"
+#include "visitor.h"
 
 namespace ast
 {
-enum class VisitStatus : bool
+const Node *ModuleTemplate::instantiate(std::vector<const TemplateArgument *> templateArguments,
+                                        ast::Context &context) const
 {
-    Stop = false,
-    Continue = true
-};
-
-class Visitor;
-class ConstVisitor;
+    assert(!"not implemented yet");
+    throw std::runtime_error("not implemented yet");
+    // TODO: finish implementing
 }
 
+AST_NODE_IMPLEMENT_VISITOR(ModuleTemplate)
+}

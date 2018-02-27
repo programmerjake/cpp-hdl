@@ -19,15 +19,23 @@
 
 #pragma once
 
+#include "template_parameter.h"
+#include <vector>
+#include "template_argument.h"
+#include "context.h"
+
 namespace ast
 {
-enum class VisitStatus : bool
+class TemplateImplementation
 {
-    Stop = false,
-    Continue = true
+public:
+    virtual ~TemplateImplementation() = default;
+    std::vector<const TemplateParameter *> templateParameters;
+    TemplateImplementation(std::vector<const TemplateParameter *> templateParameters)
+        : templateParameters(std::move(templateParameters))
+    {
+    }
+    virtual const Node *instantiate(std::vector<const TemplateArgument *> templateArguments,
+                                    ast::Context &context) const = 0;
 };
-
-class Visitor;
-class ConstVisitor;
 }
-

@@ -22,6 +22,7 @@
 #include "../util/string_pool.h"
 #include "../util/arena.h"
 #include "type_pool.h"
+#include "template_parameter_kind_pool.h"
 
 namespace ast
 {
@@ -30,6 +31,7 @@ struct Context final
     util::StringPool stringPool;
     util::Arena arena;
     TypePool typePool;
+    TemplateParameterKindPool templateParameterKindPool;
 };
 }
 

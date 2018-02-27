@@ -24,10 +24,11 @@
 
 namespace ast
 {
-struct SymbolTable;
+class SymbolTable;
 
-struct Symbol
+class Symbol
 {
+public:
     virtual ~Symbol() = default;
     LocationRange nameLocation;
     const util::StringPool::Entry name;

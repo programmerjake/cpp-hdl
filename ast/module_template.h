@@ -19,27 +19,31 @@
 
 #pragma once
 
-#include "node.h"
-#include "symbol.h"
-#include "type.h"
+#include "module.h"
+#include "template_implementation.h"
 #include "../source.h"
 #include "../util/string_pool.h"
+#include "symbol_lookup_chain.h"
+#include "symbol_table.h"
 #include "ast_macros.h"
 
 namespace ast
 {
-class Variable final : public Node, public Symbol
+class ModuleTemplate final : public GenericModule, public TemplateImplementation
 {
 public:
-    const Type *type;
-    Variable(LocationRange locationRange,
-             LocationRange nameLocation,
-             util::StringPool::Entry name,
-             const Type *type)
-        : Node(locationRange), Symbol(nameLocation, name), type(type)
+    ModuleTemplate(LocationRange locationRange,
+                   LocationRange nameLocation,
+                   util::StringPool::Entry name,
+                   SymbolLookupChain symbolLookupChain,
+                   SymbolTable *symbolTable,
+                   std::vector<const TemplateParameter *> templateParameters)
+        : GenericModule(locationRange, nameLocation, name, symbolLookupChain, symbolTable),
+          TemplateImplementation(std::move(templateParameters))
     {
     }
+    virtual const Node *instantiate(std::vector<const TemplateArgument *> templateArguments,
+                                    ast::Context &context) const override;
     AST_NODE_DECLARE_VISITOR()
 };
 }
-

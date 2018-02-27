@@ -23,8 +23,9 @@
 
 namespace ast
 {
-struct Type : public Node
+class Type : public Node
 {
+public:
     bool isStateless;
     /** type after removing all the transparent type aliases; the definition of type equality */
     const Type *const canonicalType;

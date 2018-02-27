@@ -31,22 +31,33 @@
 
 namespace ast
 {
-struct Module final : public Node, public Symbol, public SymbolScope
+class GenericModule : public Node, public Symbol, public SymbolScope
 {
+public:
     std::vector<Node *> members;
+    GenericModule(LocationRange locationRange,
+                  LocationRange nameLocation,
+                  util::StringPool::Entry name,
+                  SymbolLookupChain symbolLookupChain,
+                  SymbolTable *symbolTable)
+        : Node(locationRange),
+          Symbol(nameLocation, name),
+          SymbolScope(symbolLookupChain, symbolTable)
+    {
+    }
+};
+
+class Module final : public GenericModule
+{
+public:
     Module(LocationRange locationRange,
            LocationRange nameLocation,
            util::StringPool::Entry name,
            SymbolLookupChain symbolLookupChain,
            SymbolTable *symbolTable)
-        : Node(locationRange),
-          Symbol(nameLocation, name),
-          SymbolScope(symbolLookupChain, symbolTable),
-          members()
+        : GenericModule(locationRange, nameLocation, name, symbolLookupChain, symbolTable)
     {
     }
     AST_NODE_DECLARE_VISITOR()
 };
 }
-
-

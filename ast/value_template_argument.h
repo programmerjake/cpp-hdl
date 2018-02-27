@@ -19,23 +19,31 @@
 
 #pragma once
 
+#include "template_argument.h"
+#include "../math/bit_vector.h"
 #include "../source.h"
-#include "visitor_forward.h"
-#include <iosfwd>
+#include "context.h"
+#include "value_template_parameter_kind.h"
+#include "bit_vector_type.h"
+#include "ast_macros.h"
 
 namespace ast
 {
-class Node
+class ValueTemplateArgument final : public TemplateArgument
 {
 public:
-    LocationRange locationRange;
-    explicit Node(LocationRange locationRange) : locationRange(locationRange)
+    math::BitVector value;
+    ValueTemplateArgument(LocationRange locationRange, math::BitVector value, Context &context)
+        : TemplateArgument(
+              locationRange,
+              context.templateParameterKindPool.intern(ValueTemplateParameterKind(
+                  locationRange,
+                  false,
+                  context.typePool.getBitVectorType(
+                      BitVectorTypeDirection::Input, value.getKind(), value.getBitCount())))),
+          value(value)
     {
     }
-    virtual ~Node() = default;
-    virtual VisitStatus visit(Visitor &visitor) = 0;
-    virtual VisitStatus visit(ConstVisitor &visitor) const = 0;
-    void dump(std::ostream &os) const;
-    void dump() const;
+    AST_NODE_DECLARE_VISITOR()
 };
 }

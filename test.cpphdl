@@ -45,4 +45,7 @@ module main
         b1, b2 : submodule1::bundle1;
         b3 : !submodule1::bundle1;
     }
+    module template_module<a, b : input u64, module c : submodule1::bundle1>
+    {
+    }
 }

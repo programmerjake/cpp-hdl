@@ -17,17 +17,11 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "value_template_argument.h"
+#include "ast_macros.h"
+#include "visitor.h"
 
 namespace ast
 {
-enum class VisitStatus : bool
-{
-    Stop = false,
-    Continue = true
-};
-
-class Visitor;
-class ConstVisitor;
+AST_NODE_IMPLEMENT_VISITOR(ValueTemplateArgument)
 }
-

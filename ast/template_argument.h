@@ -19,15 +19,22 @@
 
 #pragma once
 
+#include "node.h"
+#include "template_parameter_kind.h"
+#include "../source.h"
+
 namespace ast
 {
-enum class VisitStatus : bool
+class TemplateArgument : public Node
 {
-    Stop = false,
-    Continue = true
+public:
+    const TemplateParameterKind *templateParameterKind;
+    TemplateArgument(LocationRange locationRange,
+                     const TemplateParameterKind *templateParameterKind)
+        : Node(locationRange), templateParameterKind(templateParameterKind)
+    {
+    }
 };
-
-class Visitor;
-class ConstVisitor;
 }
+
 

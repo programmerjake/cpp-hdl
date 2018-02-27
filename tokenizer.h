@@ -84,6 +84,7 @@ enum class TokenType : std::uint_fast8_t
     QMark,
 
     ColonColon,
+    DotDotDot,
 };
 
 struct Token final
@@ -194,6 +195,8 @@ struct Token final
             return "?"_sv;
         case Type::ColonColon:
             return "::"_sv;
+        case Type::DotDotDot:
+            return "..."_sv;
         }
         return {};
     }

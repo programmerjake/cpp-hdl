@@ -19,15 +19,27 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+#include "template_parameter_kind.h"
+#include "../source.h"
+#include "ast_macros.h"
+
 namespace ast
 {
-enum class VisitStatus : bool
+class TemplateParameter final : public Node, public Symbol
 {
-    Stop = false,
-    Continue = true
+public:
+    const TemplateParameterKind *kind;
+    TemplateParameter(LocationRange locationRange,
+                      LocationRange nameLocation,
+                      util::StringPool::Entry name,
+                      const TemplateParameterKind *kind)
+        : Node(locationRange), Symbol(nameLocation, name), kind(kind)
+    {
+    }
+    AST_NODE_DECLARE_VISITOR()
 };
-
-class Visitor;
-class ConstVisitor;
 }
+
 

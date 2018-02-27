@@ -19,21 +19,44 @@
 
 #include "parser.h"
 #include "ast/bit_vector_type.h"
+#include "ast/module_template.h"
+#include "ast/value_template_parameter_kind.h"
+#include "ast/module_template_parameter_kind.h"
 
-ast::Module *Parser::parseModule()
+ast::GenericModule *Parser::parseModule(bool isTopLevel)
 {
     auto moduleToken = matchToken(TokenType::Module, "expected module definition");
     auto nameToken = matchToken(TokenType::Identifier, "expected module name");
     auto moduleSymbolTable = context.arena.create<ast::SymbolTable>();
-    auto *retval = context.arena.create<ast::Module>(moduleToken.locationRange,
-                                                     nameToken.locationRange,
-                                                     context.stringPool.intern(nameToken.getText()),
-                                                     ast::SymbolLookupChain(),
-                                                     moduleSymbolTable);
-    if(!currentSymbolTable->insert(retval))
-        throw ParseError(nameToken.locationRange.begin(), "name redefinition");
+    auto parentSymbolTable = currentSymbolTable;
+    auto parentSymbolLookupChain = currentSymbolLookupChain;
     PushSymbolScope pushSymbolScope(this, moduleSymbolTable);
-    retval->symbolLookupChain = currentSymbolLookupChain;
+    std::vector<const ast::TemplateParameter *> templateParameters;
+    if(peek().type == TokenType::LAngle)
+    {
+        if(isTopLevel)
+            throw ParseError(peek().locationRange.begin(),
+                             "top-level module must not be a template");
+        templateParameters = parseTemplateParameters();
+    }
+    ast::GenericModule *retval;
+    if(templateParameters.empty())
+        retval = context.arena.create<ast::Module>(moduleToken.locationRange,
+                                                   nameToken.locationRange,
+                                                   context.stringPool.intern(nameToken.getText()),
+                                                   ast::SymbolLookupChain(),
+                                                   moduleSymbolTable);
+    else
+        retval = context.arena.create<ast::ModuleTemplate>(
+            moduleToken.locationRange,
+            nameToken.locationRange,
+            context.stringPool.intern(nameToken.getText()),
+            ast::SymbolLookupChain(),
+            moduleSymbolTable,
+            std::move(templateParameters));
+    if(!parentSymbolTable->insert(retval))
+        throw ParseError(nameToken.locationRange.begin(), "name redefinition");
+    retval->symbolLookupChain = parentSymbolLookupChain;
     matchToken(TokenType::LBrace, "expected '{' after module keyword in module definition");
     while(true)
     {
@@ -94,6 +117,7 @@ ast::Module *Parser::parseModule()
         case TokenType::RAngle:
         case TokenType::QMark:
         case TokenType::ColonColon:
+        case TokenType::DotDotDot:
             // TODO: finish
             break;
         }
@@ -155,15 +179,16 @@ std::vector<ast::Variable *> Parser::parseVariables()
         break;
     }
     matchToken(TokenType::Colon, "expected ':'");
-    auto *type = parseType();
+    auto *type = std::get<0>(parseType());
     for(auto *variable : retval)
         variable->type = type;
     matchToken(TokenType::Semicolon, "expected ';'");
     return retval;
 }
 
-const ast::Type *Parser::parseType()
+std::pair<const ast::Type *, LocationRange> Parser::parseType()
 {
+    auto locationRange = peek().locationRange;
     if(peek().type == TokenType::Input || peek().type == TokenType::Output
        || peek().type == TokenType::Reg)
     {
@@ -184,11 +209,11 @@ const ast::Type *Parser::parseType()
         {
         case TokenType::UInt:
             kind = Kind::Unsigned;
-            get();
+            locationRange.setEnd(get().locationRange.end());
             break;
         case TokenType::SInt:
             kind = Kind::Signed;
-            get();
+            locationRange.setEnd(get().locationRange.end());
             break;
         default:
             for(auto &builtinAlias : ast::BitVectorType::getBuiltinAliases())
@@ -198,7 +223,7 @@ const ast::Type *Parser::parseType()
                     bitWidth = builtinAlias.bitWidth;
                     kind = builtinAlias.kind;
                     foundBuiltinAlias = true;
-                    get();
+                    locationRange.setEnd(get().locationRange.end());
                     break;
                 }
             }
@@ -218,9 +243,9 @@ const ast::Type *Parser::parseType()
             if(mpz_cmp_ui(bitWidthGMPInteger.value, math::BitVector::maxBitCount()) > 0)
                 throw ParseError(bitWidthToken.locationRange.begin(), "bit vector is too wide");
             bitWidth = mpz_get_ui(bitWidthGMPInteger);
-            matchToken(TokenType::RAngle, "expected '>'");
+            locationRange.setEnd(matchToken(TokenType::RAngle, "expected '>'").locationRange.end());
         }
-        return context.typePool.getBitVectorType(direction, kind, bitWidth);
+        return {context.typePool.getBitVectorType(direction, kind, bitWidth), locationRange};
     }
     bool flipped = false;
     if(peek().type == TokenType::EMark)
@@ -229,8 +254,9 @@ const ast::Type *Parser::parseType()
         flipped = true;
     }
     auto scopedName = parseScopedName();
+    locationRange.setEnd(std::get<1>(scopedName).locationRange.end());
     if(auto type = dynamic_cast<const ast::Type *>(std::get<0>(scopedName)))
-        return flipped ? type->getFlippedType() : type;
+        return {flipped ? type->getFlippedType() : type, locationRange};
     throw ParseError(std::get<1>(scopedName).locationRange.begin(), "expected type name");
 }
 
@@ -267,11 +293,100 @@ std::pair<ast::Symbol *, Token> Parser::parseScopedName()
     return {symbol, lastName};
 }
 
+std::vector<const ast::TemplateParameter *> Parser::parseTemplateParameters()
+{
+    matchToken(TokenType::LAngle, "expected '<'");
+    if(peek().type == TokenType::RAngle)
+    {
+        get();
+        return {};
+    }
+    std::vector<Token> nameList;
+    std::vector<const ast::TemplateParameter *> retval;
+    while(true)
+    {
+        auto kind = ast::TemplateParameterKind::Kind::Value;
+        switch(peek().type)
+        {
+        case TokenType::Module:
+            get();
+            kind = ast::TemplateParameterKind::Kind::Module;
+            break;
+        default:
+            break;
+        }
+        nameList.clear();
+        while(true)
+        {
+            nameList.push_back(
+                matchToken(TokenType::Identifier, "expected template parameter name"));
+            if(peek().type == TokenType::Comma)
+            {
+                get();
+                continue;
+            }
+            break;
+        }
+        matchToken(TokenType::Colon, "expected ':'");
+        auto typeAndLocationRange = parseType();
+        auto templateParameterKindLocationRange = std::get<1>(typeAndLocationRange);
+        auto *type = std::get<0>(typeAndLocationRange);
+        bool isList = false;
+        if(peek().type == TokenType::DotDotDot)
+        {
+            isList = true;
+            templateParameterKindLocationRange.setEnd(get().locationRange.end());
+        }
+        const ast::TemplateParameterKind *templateParameterKind = nullptr;
+        switch(kind)
+        {
+        case ast::TemplateParameterKind::Kind::Value:
+            if(dynamic_cast<const ast::BitVectorType *>(type->canonicalType))
+            {
+                templateParameterKind =
+                    context.templateParameterKindPool.intern(ast::ValueTemplateParameterKind(
+                        templateParameterKindLocationRange, isList, type));
+            }
+            else
+            {
+                throw ParseError(std::get<1>(typeAndLocationRange).begin(),
+                                 "type must be an integer (uint or sint)");
+            }
+            break;
+        case ast::TemplateParameterKind::Kind::Module:
+            templateParameterKind = context.templateParameterKindPool.intern(
+                ast::ModuleTemplateParameterKind(templateParameterKindLocationRange, isList, type));
+            break;
+        }
+        assert(templateParameterKind);
+        for(auto &name : nameList)
+        {
+            auto *templateParameter = context.arena.create<ast::TemplateParameter>(
+                name.locationRange,
+                name.locationRange,
+                context.stringPool.intern(name.getText()),
+                templateParameterKind);
+            retval.push_back(templateParameter);
+            if(!currentSymbolTable->insert(templateParameter))
+                throw ParseError(name.locationRange.begin(), "name redefinition");
+        }
+        if(peek().type == TokenType::Comma)
+        {
+            get();
+            continue;
+        }
+        break;
+    }
+    matchToken(TokenType::RAngle, "expected '>'");
+    return retval;
+}
+
 ast::Module *Parser::parseTopLevelModule()
 {
     PushSymbolScope pushSymbolScope(this, globalSymbolTable);
     auto module = parseModule();
     if(peek().type != TokenType::EndOfFile)
         throw ParseError(peek().locationRange.begin(), "extra tokens before end of file");
-    return module;
+    assert(dynamic_cast<ast::Module *>(module));
+    return static_cast<ast::Module *>(module);
 }

@@ -24,8 +24,9 @@
 
 namespace ast
 {
-struct SymbolScope
+class SymbolScope
 {
+public:
     virtual ~SymbolScope() = default;
     SymbolLookupChain symbolLookupChain; // includes symbolTable
     SymbolTable *symbolTable;

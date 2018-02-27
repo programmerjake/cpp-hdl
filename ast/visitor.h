@@ -24,10 +24,21 @@
 
 namespace ast
 {
-#define AST_VISITOR_NODE_LIST(function_macro)                                              \
-    function_macro(Module) function_macro(TransparentTypeAlias) function_macro(Variable)   \
-        function_macro(FlippedBundle) function_macro(Bundle) function_macro(BitVectorType) \
-            function_macro(NamedInterface) function_macro(AnonymousInterface)
+// clang-format off
+#define AST_VISITOR_NODE_LIST(f) \
+    f(Module) \
+    f(TransparentTypeAlias) \
+    f(Variable) \
+    f(FlippedBundle) \
+    f(Bundle) \
+    f(BitVectorType) \
+    f(ModuleTemplate) \
+    f(ModuleTemplateArgument) \
+    f(ModuleTemplateParameterKind) \
+    f(TemplateParameter) \
+    f(ValueTemplateArgument) \
+    f(ValueTemplateParameterKind)
+// clang-format on
 
 #define AST_VISITOR_DECLARE_NODE_TYPE(T) class T;
 
@@ -37,8 +48,9 @@ AST_VISITOR_NODE_LIST(AST_VISITOR_DECLARE_NODE_TYPE)
 
 #define AST_VISITOR_DECLARE_CONST_VISIT_FUNCTION(T) virtual VisitStatus visit(const T *node) = 0;
 
-struct ConstVisitor
+class ConstVisitor
 {
+public:
     virtual ~ConstVisitor() = default;
     AST_VISITOR_NODE_LIST(AST_VISITOR_DECLARE_CONST_VISIT_FUNCTION)
 };
@@ -50,8 +62,9 @@ struct ConstVisitor
         return visit(static_cast<const T *>(node)); \
     }
 
-struct Visitor : public ConstVisitor
+class Visitor : public ConstVisitor
 {
+public:
     using ConstVisitor::visit;
     AST_VISITOR_NODE_LIST(AST_VISITOR_DECLARE_VISIT_FUNCTION)
 };

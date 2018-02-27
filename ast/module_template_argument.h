@@ -19,15 +19,28 @@
 
 #pragma once
 
+#include "template_argument.h"
+#include "../math/bit_vector.h"
+#include "../source.h"
+#include "context.h"
+#include "module_template_parameter_kind.h"
+#include "bit_vector_type.h"
+#include "ast_macros.h"
+
 namespace ast
 {
-enum class VisitStatus : bool
+class Module;
+
+class ModuleTemplateArgument final : public TemplateArgument
 {
-    Stop = false,
-    Continue = true
+public:
+    const Module *value;
+    ModuleTemplateArgument(LocationRange locationRange,
+                           const Module *value,
+                           const ModuleTemplateParameterKind *templateParameterKind)
+        : TemplateArgument(locationRange, templateParameterKind), value(value)
+    {
+    }
+    AST_NODE_DECLARE_VISITOR()
 };
-
-class Visitor;
-class ConstVisitor;
 }
-
