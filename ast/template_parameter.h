@@ -19,6 +19,33 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+#include "comment.h"
+#include <vector>
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class TemplateParameter : public Node, public Symbol
+{
+public:
+    ConsecutiveComments beforeNameComments;
+    ConsecutiveComments beforeDotDotDotComments;
+    bool hasDotDotDot;
+    explicit TemplateParameter(parse::LocationRange locationRange,
+                               ConsecutiveComments beforeNameComments,
+                               parse::LocationRange symbolLocationRange,
+                               util::StringPool::Entry name,
+                               ConsecutiveComments beforeDotDotDotComments,
+                               bool hasDotDotDot) noexcept
+        : Node(locationRange),
+          Symbol(symbolLocationRange, name),
+          beforeNameComments(beforeNameComments),
+          beforeDotDotDotComments(beforeDotDotDotComments),
+          hasDotDotDot(hasDotDotDot)
+    {
+    }
+};
 }

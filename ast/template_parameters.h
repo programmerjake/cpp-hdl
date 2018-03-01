@@ -19,8 +19,43 @@
 
 #pragma once
 
+#include "node.h"
+#include "comment.h"
+#include "template_parameter.h"
+#include <vector>
+#include "../parse/source.h"
+
 namespace ast
 {
-struct TemplateParameters;
-#warning implement ast::TemplateParameters
+class TemplateParameters final : public Node
+{
+public:
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        TemplateParameter *templateParameter;
+        constexpr Part(ConsecutiveComments beforeCommaComments,
+                       TemplateParameter *templateParameter) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              templateParameter(templateParameter)
+        {
+        }
+    };
+    ConsecutiveComments beforeLBraceComments;
+    TemplateParameter *firstTemplateParameter;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeRBraceComments;
+    explicit TemplateParameters(parse::LocationRange locationRange,
+                                ConsecutiveComments beforeLBraceComments,
+                                TemplateParameter *firstTemplateParameter,
+                                std::vector<Part> parts,
+                                ConsecutiveComments beforeRBraceComments) noexcept
+        : Node(locationRange),
+          beforeLBraceComments(beforeLBraceComments),
+          firstTemplateParameter(firstTemplateParameter),
+          parts(std::move(parts)),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }

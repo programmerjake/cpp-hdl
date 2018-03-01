@@ -23,7 +23,7 @@ Import : "import" ID ";";
 
 Module : "module" ID TemplateParameters? ("implements" Type)? "{" Statement* "}";
 
-TemplateParameters : "{" ( (TemplateParameter ",")* TemplateParameter )? "}";
+TemplateParameters : "{" ( TemplateParameter ("," TemplateParameter)* )? "}";
 
 TemplateParameter : "type" ID ("implements" Type)? "..."?
                   | ID ":" Type "..."?;

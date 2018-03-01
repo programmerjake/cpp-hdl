@@ -140,6 +140,42 @@ struct Parser
                                    std::move(statements),
                                    closingLBrace.comments);
     }
+    ast::TemplateParameters *parseTemplateParameters()
+    {
+        Location startLocation = peek().token.locationRange.begin();
+        auto openingLBrace = matchAndGet(TokenType::LBrace);
+        ast::TemplateParameter *firstTemplateParameter = nullptr;
+        std::vector<ast::TemplateParameters::Part> parts;
+        if(peek().token.type != TokenType::RBrace)
+        {
+            firstTemplateParameter = parseTemplateParameter();
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto comma = get();
+                parts.push_back(
+                    ast::TemplateParameters::Part(comma.comments, parseTemplateParameter()));
+            }
+        }
+        LocationRange locationRange(startLocation, peek().token.locationRange.end());
+        auto closingRBrace = matchAndGet(TokenType::RBrace);
+        return create<ast::TemplateParameters>(locationRange,
+                                               openingLBrace.comments,
+                                               firstTemplateParameter,
+                                               std::move(parts),
+                                               closingRBrace.comments);
+    }
+    ast::TemplateParameter *parseTemplateParameter()
+    {
+#error finish
+    }
+    ast::Statement *parseStatement()
+    {
+#error finish
+    }
+    ast::Type *parseType()
+    {
+#error finish
+    }
 };
 
 ast::TopLevelModule *parseTopLevelModule(
