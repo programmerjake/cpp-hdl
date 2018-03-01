@@ -34,7 +34,7 @@ if(WIN32)
     add_definitions(NOMINMAX)
 endif()
 
-add_compile_options(-Wall)
+add_compile_options(-Wall -Wunused-parameter)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Werror "-Wno-error=#warnings")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -46,6 +46,7 @@ set(SOURCES main.cpp)
 add_executable(hdlc ${SOURCES})
 
 set(SUBDIRS
+    ast
     math
     parse
     util)

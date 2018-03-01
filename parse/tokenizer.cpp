@@ -334,7 +334,8 @@ struct Tokenizer::TokenParser
                 if(peek() == '.')
                 {
                     get();
-                    return Token(TokenType::DotDotDot, LocationRange(startLocation, currentLocation));
+                    return Token(TokenType::DotDotDot,
+                                 LocationRange(startLocation, currentLocation));
                 }
                 currentLocation = afterFirstDot;
             }

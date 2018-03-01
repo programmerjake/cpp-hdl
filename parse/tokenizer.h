@@ -22,13 +22,12 @@
 #include "../math/bit_vector.h"
 #include "token.h"
 #include "source.h"
+#include "../ast/comment.h"
 
 namespace parse
 {
 class Tokenizer final
 {
-    friend math::GMPInteger Token::getValue() const;
-
 private:
     struct TokenParser;
 
@@ -54,9 +53,65 @@ public:
         currentToken = {};
         return retval;
     }
-    operator bool()
+    explicit operator bool()
     {
         return peek().locationRange ? true : false;
+    }
+};
+
+class CommentGroupingTokenizer final
+{
+public:
+    struct CommentsAndToken final
+    {
+        ast::ConsecutiveComments comments;
+        Token token;
+        constexpr CommentsAndToken() noexcept : comments(), token()
+        {
+        }
+        constexpr CommentsAndToken(ast::ConsecutiveComments comments, Token token) noexcept
+            : comments(comments),
+              token(token)
+        {
+        }
+    };
+
+private:
+    Location currentLocation;
+    CommentsAndToken currentToken;
+
+public:
+    constexpr explicit CommentGroupingTokenizer(const Source *source) noexcept
+        : currentLocation(source, 0),
+          currentToken()
+    {
+    }
+    static CommentsAndToken parseToken(Location &currentLocation)
+    {
+        auto token = Tokenizer::parseToken(currentLocation);
+        ast::ConsecutiveComments comments(LocationRange(token.locationRange.begin()));
+        while(token.isComment())
+        {
+            comments.locationRange.setEnd(token.locationRange.end());
+            token = Tokenizer::parseToken(currentLocation);
+        }
+        return {comments, token};
+    }
+    CommentsAndToken peek()
+    {
+        if(!currentToken.token.locationRange)
+            currentToken = parseToken(currentLocation);
+        return currentToken;
+    }
+    CommentsAndToken get()
+    {
+        auto retval = peek();
+        currentToken = {};
+        return retval;
+    }
+    explicit operator bool()
+    {
+        return peek().token.locationRange ? true : false;
     }
 };
 }

@@ -37,16 +37,38 @@ enum class TokenType : std::uint_fast8_t
     BinaryLiteralInteger,
 
     Bit,
-    Bundle,
+    Cast,
+    Cat,
+    Const,
+    Else,
+    Enum,
+    Fill,
+    Flip,
+    For,
+    From,
+    Function,
+    If,
+    Implements,
+    Import,
+    In,
     Input,
+    Interface,
+    Let,
+    Match,
+    Memory,
     Module,
     Output,
+    PopCount,
     Reg,
+    Return,
     S16,
     S32,
     S64,
     S8,
     SInt,
+    To,
+    Type,
+    TypeOf,
     U16,
     U32,
     U64,
@@ -111,16 +133,54 @@ struct Token final
             return "<BinaryLiteralInteger>"_sv;
         case Type::Bit:
             return "bit"_sv;
-        case Type::Bundle:
-            return "bundle"_sv;
+        case Type::Cast:
+            return "cast"_sv;
+        case Type::Cat:
+            return "cat"_sv;
+        case Type::Const:
+            return "const"_sv;
+        case Type::Else:
+            return "else"_sv;
+        case Type::Enum:
+            return "enum"_sv;
+        case Type::Fill:
+            return "fill"_sv;
+        case Type::Flip:
+            return "flip"_sv;
+        case Type::For:
+            return "for"_sv;
+        case Type::From:
+            return "from"_sv;
+        case Type::Function:
+            return "function"_sv;
+        case Type::If:
+            return "if"_sv;
+        case Type::Implements:
+            return "implements"_sv;
+        case Type::Import:
+            return "import"_sv;
+        case Type::In:
+            return "in"_sv;
         case Type::Input:
             return "input"_sv;
+        case Type::Interface:
+            return "interface"_sv;
+        case Type::Let:
+            return "let"_sv;
+        case Type::Match:
+            return "match"_sv;
+        case Type::Memory:
+            return "memory"_sv;
         case Type::Module:
             return "module"_sv;
         case Type::Output:
             return "output"_sv;
+        case Type::PopCount:
+            return "popCount"_sv;
         case Type::Reg:
             return "reg"_sv;
+        case Type::Return:
+            return "return"_sv;
         case Type::S16:
             return "s16"_sv;
         case Type::S32:
@@ -131,6 +191,12 @@ struct Token final
             return "s8"_sv;
         case Type::SInt:
             return "sint"_sv;
+        case Type::To:
+            return "to"_sv;
+        case Type::Type:
+            return "type"_sv;
+        case Type::TypeOf:
+            return "typeOf"_sv;
         case Type::U16:
             return "u16"_sv;
         case Type::U32:
@@ -219,7 +285,7 @@ struct Token final
                                                                        locationRange(locationRange)
     {
     }
-    math::GMPInteger getValue() const;
+    math::GMPInteger getIntegerValue() const;
     static constexpr bool isComment(Type type) noexcept
     {
         switch(type)

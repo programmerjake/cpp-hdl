@@ -19,7 +19,7 @@
 
 TopLevelModule : Import* Module;
 
-Import : "import" ID "from" STRING;
+Import : "import" ID ";";
 
 Module : "module" ID TemplateParameters? ("implements" Type)? "{" Statement* "}";
 
@@ -32,34 +32,49 @@ Interface : "interface" ID TemplateParameters? ("implements" Type)? "{" Statemen
 
 Enum : "enum" ID ":" Type "{" (ID "=" Expression ("," ID "=" Expression)*) ","? "}";
 
-Function : "function" ID TemplateParameters? "(" (ID ":" Type ("," ID ":" Type)*)? ")" (":" Type)? "{" Statement* "}";
+Function : "function" ID TemplateParameters? "(" (FunctionParameter ("," FunctionParameter)*)? ")" (":" Type)? "{" Statement* "}";
+
+FunctionParameter : ID ":" Type;
 
 Statement : Module
           | Interface
           | Enum
           | Function
           | "type" ID "=" Type ";"
-          | "const" ID "=" Expression ("," ID "=" Expression) ";"
+          | "const" ConstStatementPart ("," ConstStatementPart)* ";"
           | "let" LetStatementPart ("," LetStatementPart)* ";"
           | ("input" | "output") InputOutputStatementPart ("," InputOutputStatementPart)* ";"
           | "reg" RegStatementPart ("," RegStatementPart)* ";"
           | "if" "(" Expression ")" Statement ("else" Statement)
           | "for" "(" ID "in" Expression ("to" Expression)? ")" Statement
-          | "match" "(" Expression ")" "{" (MatchPattern "=>" Statement)* "}"
+          | "for" "(" "type" ID "in" ScopedId ")" Statement
+          | "match" "(" Expression ")" "{" MatchStatementPart* "}"
           | Expression ";"
           | "{" Statement* "}"
           | "return" Expression? ";"
+          | "break" ";"
+          | "continue" ";"
           | ";";
+
+ConstStatementPart : ID "=" Expression;
+
+MatchStatementPart : MatchPattern "=>" Statement;
 
 MatchPattern : Expression ("to" Expression)?
              | NUMBER_PATTERN;
 
-LetStatementPart : ID ("," ID)* ":" Type;
+LetStatementPart : LetStatementName ("," LetStatementName)* ":" Type;
 
-InputOutputStatementPart : ID ("," ID)* ":" Type;
+LetStatementName : ID;
 
-RegStatementPart : ID ("," ID)* ":" Type
-                 | ID "=" Expression;
+InputOutputStatementPart : InputOutputStatementName ("," InputOutputStatementName)* ":" Type;
+
+InputOutputStatementName : ID;
+
+RegStatementPart : RegStatementName ("," RegStatementName)* ":" Type
+                 | RegStatementName "=" Expression;
+
+RegStatementName : ID;
 
 Expression : ScopedId
            | NUMBER
@@ -102,7 +117,10 @@ Expression : ScopedId
 
 ScopedId : "::"? ID TemplateArguments? ("::" ID TemplateArguments?)*;
 
-TemplateArguments : "{" (("type" Type | Expression) ("," ("type" Type | Expression))*)? "}";
+TemplateArguments : "{" (TemplateArgument ("," TemplateArgument)*)? "}";
+
+TemplateArgument : "type" Type
+                 | Expression;
 
 Type : ScopedId
      | "flip" Type

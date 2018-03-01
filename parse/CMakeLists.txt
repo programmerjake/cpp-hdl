@@ -21,6 +21,7 @@ add_library(parse INTERFACE)
 
 set(SOURCES
     parse_error.cpp
+    parser.cpp
     source.cpp
     token.cpp
     tokenizer.cpp)

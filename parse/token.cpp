@@ -18,14 +18,13 @@
  */
 
 #include "token.h"
-#include "tokenizer.h"
 #include <type_traits>
 #include "parse_error.h"
 #include "character_properties.h"
 
 namespace parse
 {
-math::GMPInteger Token::getValue() const
+math::GMPInteger Token::getIntegerValue() const
 {
     util::string_view text = getText();
     int base = 10;
