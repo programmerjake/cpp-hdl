@@ -37,9 +37,11 @@ enum class TokenType : std::uint_fast8_t
     BinaryLiteralInteger,
 
     Bit,
+    Break,
     Cast,
     Cat,
     Const,
+    Continue,
     Else,
     Enum,
     Fill,
@@ -133,12 +135,16 @@ struct Token final
             return "<BinaryLiteralInteger>"_sv;
         case Type::Bit:
             return "bit"_sv;
+        case Type::Break:
+            return "break"_sv;
         case Type::Cast:
             return "cast"_sv;
         case Type::Cat:
             return "cat"_sv;
         case Type::Const:
             return "const"_sv;
+        case Type::Continue:
+            return "continue"_sv;
         case Type::Else:
             return "else"_sv;
         case Type::Enum:

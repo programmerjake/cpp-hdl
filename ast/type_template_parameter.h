@@ -19,6 +19,39 @@
 
 #pragma once
 
+#include "template_parameter.h"
+#include "comment.h"
+#include "type.h"
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class TypeTemplateParameter final : public TemplateParameter
+{
+public:
+    ConsecutiveComments beforeTypeComments;
+    ConsecutiveComments beforeImplementsComments;
+    Type *parentType;
+    explicit TypeTemplateParameter(parse::LocationRange locationRange,
+                                   ConsecutiveComments beforeTypeComments,
+                                   ConsecutiveComments beforeNameComments,
+                                   parse::LocationRange symbolLocationRange,
+                                   util::StringPool::Entry name,
+                                   ConsecutiveComments beforeImplementsComments,
+                                   Type *parentType,
+                                   ConsecutiveComments beforeDotDotDotComments,
+                                   bool hasDotDotDot) noexcept
+        : TemplateParameter(locationRange,
+                            beforeNameComments,
+                            symbolLocationRange,
+                            name,
+                            beforeDotDotDotComments,
+                            hasDotDotDot),
+          beforeTypeComments(beforeTypeComments),
+          beforeImplementsComments(beforeImplementsComments),
+          parentType(parentType)
+    {
+    }
+};
 }

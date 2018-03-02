@@ -19,6 +19,13 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+
 namespace ast
 {
+class FunctionParameter final : public Node, public Symbol
+{
+#error finish
+};
 }

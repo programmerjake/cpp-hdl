@@ -19,6 +19,51 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+#include "comment.h"
+#include "template_parameters.h"
+#include "type.h"
+#include "statement.h"
+#include <vector>
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class Interface final : public Node, public Symbol
+{
+public:
+    ConsecutiveComments beforeInterfaceComments;
+    ConsecutiveComments beforeNameComments;
+    TemplateParameters *templateParameters;
+    ConsecutiveComments beforeImplementsComments;
+    Type *parentType;
+    ConsecutiveComments beforeLBraceComments;
+    std::vector<Statement *> statements;
+    ConsecutiveComments beforeRBraceComments;
+    explicit Interface(parse::LocationRange locationRange,
+                       ConsecutiveComments beforeInterfaceComments,
+                       ConsecutiveComments beforeNameComments,
+                       parse::LocationRange symbolLocationRange,
+                       util::StringPool::Entry name,
+                       TemplateParameters *templateParameters,
+                       ConsecutiveComments beforeImplementsComments,
+                       Type *parentType,
+                       ConsecutiveComments beforeLBraceComments,
+                       std::vector<Statement *> statements,
+                       ConsecutiveComments beforeRBraceComments) noexcept
+        : Node(locationRange),
+          Symbol(symbolLocationRange, name),
+          beforeInterfaceComments(beforeInterfaceComments),
+          beforeNameComments(beforeNameComments),
+          templateParameters(templateParameters),
+          beforeImplementsComments(beforeImplementsComments),
+          parentType(parentType),
+          beforeLBraceComments(beforeLBraceComments),
+          statements(std::move(statements)),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }

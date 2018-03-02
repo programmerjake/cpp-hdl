@@ -19,6 +19,75 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+#include "comment.h"
+#include "template_parameters.h"
+#include "function_parameter.h"
+#include "type.h"
+#include "statement.h"
+#include <vector>
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class Function final : public Node, public Symbol
+{
+public:
+    struct Parameter final
+    {
+        ConsecutiveComments beforeCommaComments;
+        FunctionParameter *functionParameter;
+        constexpr Parameter(ConsecutiveComments beforeCommaComments,
+                            FunctionParameter *functionParameter) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              functionParameter(functionParameter)
+        {
+        }
+    };
+    ConsecutiveComments beforeFunctionComments;
+    ConsecutiveComments beforeNameComments;
+    TemplateParameters *templateParameters;
+    ConsecutiveComments beforeLParenComments;
+    FunctionParameter *firstFunctionParameter;
+    std::vector<Parameter> parameters;
+    ConsecutiveComments beforeRParenComments;
+    ConsecutiveComments beforeColonComments;
+    Type *returnType;
+    ConsecutiveComments beforeLBraceComments;
+    std::vector<Statement> statements;
+    ConsecutiveComments beforeRBraceComments;
+    explicit Function(parse::LocationRange locationRange,
+                      ConsecutiveComments beforeFunctionComments,
+                      ConsecutiveComments beforeNameComments,
+                      parse::LocationRange nameLocationRange,
+                      util::StringPool::Entry name,
+                      TemplateParameters *templateParameters,
+                      ConsecutiveComments beforeLParenComments,
+                      FunctionParameter *firstFunctionParameter,
+                      std::vector<Parameter> parameters,
+                      ConsecutiveComments beforeRParenComments,
+                      ConsecutiveComments beforeColonComments,
+                      Type *returnType,
+                      ConsecutiveComments beforeLBraceComments,
+                      std::vector<Statement> statements,
+                      ConsecutiveComments beforeRBraceComments) noexcept
+        : Node(locationRange),
+          Symbol(nameLocationRange, name),
+          beforeFunctionComments(beforeFunctionComments),
+          beforeNameComments(beforeNameComments),
+          templateParameters(templateParameters),
+          beforeLParenComments(beforeLParenComments),
+          firstFunctionParameter(firstFunctionParameter),
+          parameters(std::move(parameters)),
+          beforeRParenComments(beforeRParenComments),
+          beforeColonComments(beforeColonComments),
+          returnType(returnType),
+          beforeLBraceComments(beforeLBraceComments),
+          statements(std::move(statements)),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }

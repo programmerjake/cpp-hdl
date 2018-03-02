@@ -30,7 +30,9 @@ TemplateParameter : "type" ID ("implements" Type)? "..."?
 
 Interface : "interface" ID TemplateParameters? ("implements" Type)? "{" Statement* "}";
 
-Enum : "enum" ID ":" Type "{" (ID "=" Expression ("," ID "=" Expression)*) ","? "}";
+Enum : "enum" ID ":" Type "{" (EnumPart ("," EnumPart)*) ","? "}";
+
+EnumPart : ID "=" Expression;
 
 Function : "function" ID TemplateParameters? "(" (FunctionParameter ("," FunctionParameter)*)? ")" (":" Type)? "{" Statement* "}";
 
@@ -80,7 +82,7 @@ Expression : ScopedId
            | NUMBER
            | "(" Expression ")"
            | "{" (Expression ",")* (Expression ","?)? "}"
-           | ScopedId "(" (Expression ("," Expression)*)? ")"
+           | Expression "(" (Expression ("," Expression)*)? ")"
            | "cast" "{" Type "}" "(" Expression ")"
            | "!" Expression
            | "~" Expression
@@ -139,4 +141,5 @@ Type : ScopedId
      | "s1"
      | "u1"
      | "memory" Expression "of" Type
+     | "{" (Type ",")* (Type ","?)? "}"
      | "function" "(" ((ID ":")? Type ("," (ID ":")? Type)*)? ")" (":" Type)? "{" Statement* "}";

@@ -19,18 +19,19 @@
 
 #pragma once
 
-#include "statement.h"
+#include "node.h"
 #include "symbol.h"
 #include "comment.h"
 #include "template_parameters.h"
 #include "type.h"
+#include "statement.h"
 #include <vector>
 #include "../parse/source.h"
 #include "../util/string_pool.h"
 
 namespace ast
 {
-class Module final : public Statement, public Symbol
+class Module final : public Node, public Symbol
 {
 public:
     ConsecutiveComments beforeModuleComments;
@@ -52,7 +53,7 @@ public:
                     ConsecutiveComments beforeLBraceComments,
                     std::vector<Statement *> statements,
                     ConsecutiveComments beforeRBraceComments) noexcept
-        : Statement(locationRange),
+        : Node(locationRange),
           Symbol(symbolLocationRange, name),
           beforeModuleComments(beforeModuleComments),
           beforeNameComments(beforeNameComments),

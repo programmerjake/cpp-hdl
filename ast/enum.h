@@ -19,6 +19,81 @@
 
 #pragma once
 
+#include "node.h"
+#include "symbol.h"
+#include "comment.h"
+#include "template_parameters.h"
+#include "type.h"
+#include <vector>
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class Enum;
+
+class EnumPart final : public Node, public Symbol
+{
+public:
+    ConsecutiveComments beforeNameComments;
+    ConsecutiveComments beforeEqualComments;
+    Expression *value;
+    Enum *parentEnum;
+    explicit EnumPart(parse::LocationRange locationRange,
+                      ConsecutiveComments beforeNameComments,
+                      parse::LocationRange symbolLocationRange,
+                      util::StringPool::Entry name,
+                      ConsecutiveComments beforeEqualComments,
+                      Expression *value) noexcept : Node(locationRange),
+                                                    Symbol(symbolLocationRange, name),
+                                                    beforeNameComments(beforeNameComments),
+                                                    beforeEqualComments(beforeEqualComments),
+                                                    value(value),
+                                                    parentEnum(nullptr)
+    {
+    }
+};
+
+class Enum final : public Node, public Symbol
+{
+public:
+    struct Part final
+    {
+        EnumPart *enumPart;
+        ConsecutiveComments beforeCommaComments;
+        constexpr Part(EnumPart *enumPart, ConsecutiveComments beforeCommaComments) noexcept
+            : enumPart(enumPart),
+              beforeCommaComments(beforeCommaComments)
+        {
+        }
+    };
+    ConsecutiveComments beforeEnumComments;
+    ConsecutiveComments beforeNameComments;
+    ConsecutiveComments beforeColonComments;
+    Type *underlyingType;
+    ConsecutiveComments beforeLBraceComments;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeRBraceComments;
+    explicit Enum(parse::LocationRange locationRange,
+                  ConsecutiveComments beforeEnumComments,
+                  ConsecutiveComments beforeNameComments,
+                  parse::LocationRange symbolLocationRange,
+                  util::StringPool::Entry name,
+                  ConsecutiveComments beforeColonComments,
+                  Type *underlyingType,
+                  ConsecutiveComments beforeLBraceComments,
+                  std::vector<Part> parts,
+                  ConsecutiveComments beforeRBraceComments) noexcept
+        : Node(locationRange),
+          Symbol(symbolLocationRange, name),
+          beforeEnumComments(beforeEnumComments),
+          beforeNameComments(beforeNameComments),
+          beforeColonComments(beforeColonComments),
+          underlyingType(underlyingType),
+          beforeLBraceComments(beforeLBraceComments),
+          parts(std::move(parts)),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }
