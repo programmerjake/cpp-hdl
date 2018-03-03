@@ -22,11 +22,11 @@
 #include "node.h"
 #include "symbol.h"
 #include "comment.h"
-#include "template_parameters.h"
-#include "type.h"
-#include <vector>
+#include "expression.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "type.h"
+#include <vector>
 
 namespace ast
 {

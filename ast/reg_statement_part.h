@@ -19,6 +19,42 @@
 
 #pragma once
 
+#include "node.h"
+#include "comment.h"
+#include "reg_statement_name.h"
+#include <vector>
+#include "type.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class RegStatementPart final : public Node
+{
+public:
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        RegStatementName *name;
+        constexpr Part(ConsecutiveComments beforeCommaComments, RegStatementName *name) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              name(name)
+        {
+        }
+    };
+    RegStatementName *firstName;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeColonComments;
+    Type *type;
+    explicit RegStatementPart(parse::LocationRange locationRange,
+                              RegStatementName *firstName,
+                              std::vector<Part> parts,
+                              ConsecutiveComments beforeColonComments,
+                              Type *type) noexcept : Node(locationRange),
+                                                     firstName(firstName),
+                                                     parts(std::move(parts)),
+                                                     beforeColonComments(beforeColonComments),
+                                                     type(type)
+    {
+    }
+};
 }

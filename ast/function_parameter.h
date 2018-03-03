@@ -21,11 +21,28 @@
 
 #include "node.h"
 #include "symbol.h"
+#include "comment.h"
+#include "type.h"
 
 namespace ast
 {
 class FunctionParameter final : public Node, public Symbol
 {
-#error finish
+public:
+    ConsecutiveComments beforeNameComments;
+    ConsecutiveComments beforeColonComments;
+    Type *type;
+    explicit FunctionParameter(parse::LocationRange locationRange,
+                               ConsecutiveComments beforeNameComments,
+                               parse::LocationRange nameLocationRange,
+                               util::StringPool::Entry name,
+                               ConsecutiveComments beforeColonComments,
+                               Type *type) noexcept : Node(locationRange),
+                                                      Symbol(nameLocationRange, name),
+                                                      beforeNameComments(beforeNameComments),
+                                                      beforeColonComments(beforeColonComments),
+                                                      type(type)
+    {
+    }
 };
 }

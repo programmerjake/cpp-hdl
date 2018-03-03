@@ -47,9 +47,9 @@ Statement : Module
           | "let" LetStatementPart ("," LetStatementPart)* ";"
           | ("input" | "output") InputOutputStatementPart ("," InputOutputStatementPart)* ";"
           | "reg" RegStatementPart ("," RegStatementPart)* ";"
-          | "if" "(" Expression ")" Statement ("else" Statement)
+          | "if" "(" Expression ")" Statement ("else" Statement)?
           | "for" "(" ID "in" Expression ("to" Expression)? ")" Statement
-          | "for" "(" "type" ID "in" ScopedId ")" Statement
+          | "for" "(" "type" ID "in" Type ")" Statement
           | "match" "(" Expression ")" "{" MatchStatementPart* "}"
           | Expression ";"
           | "{" Statement* "}"

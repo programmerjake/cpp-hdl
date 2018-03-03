@@ -19,6 +19,42 @@
 
 #pragma once
 
+#include "node.h"
+#include "comment.h"
+#include "let_statement_name.h"
+#include <vector>
+#include "type.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class LetStatementPart final : public Node
+{
+public:
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        LetStatementName *name;
+        constexpr Part(ConsecutiveComments beforeCommaComments, LetStatementName *name) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              name(name)
+        {
+        }
+    };
+    LetStatementName *firstName;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeColonComments;
+    Type *type;
+    explicit LetStatementPart(parse::LocationRange locationRange,
+                              LetStatementName *firstName,
+                              std::vector<Part> parts,
+                              ConsecutiveComments beforeColonComments,
+                              Type *type) noexcept : Node(locationRange),
+                                                     firstName(firstName),
+                                                     parts(std::move(parts)),
+                                                     beforeColonComments(beforeColonComments),
+                                                     type(type)
+    {
+    }
+};
 }

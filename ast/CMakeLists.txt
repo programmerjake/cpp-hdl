@@ -48,11 +48,13 @@ set(SOURCES
     if_statement.cpp
     import.cpp
     input_output_statement.cpp
+    input_output_statement_name.cpp
     input_output_statement_part.cpp
     int_type.cpp
     interface.cpp
     interface_statement.cpp
     let_statement.cpp
+    let_statement_name.cpp
     let_statement_part.cpp
     list_expression.cpp
     match_pattern.cpp
@@ -64,6 +66,7 @@ set(SOURCES
     paren_expression.cpp
     pop_count_expression.cpp
     reg_statement.cpp
+    reg_statement_name.cpp
     reg_statement_part.cpp
     return_statement.cpp
     scoped_id.cpp

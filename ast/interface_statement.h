@@ -19,6 +19,20 @@
 
 #pragma once
 
+#include "statement.h"
+#include "interface.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class InterfaceStatement final : public Statement
+{
+public:
+    Interface *value;
+    explicit InterfaceStatement(parse::LocationRange locationRange, Interface *value) noexcept
+        : Statement(locationRange),
+          value(value)
+    {
+    }
+};
 }

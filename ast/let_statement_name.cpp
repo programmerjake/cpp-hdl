@@ -17,22 +17,8 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "statement.h"
-#include "function.h"
-#include "../parse/source.h"
+#include "let_statement_name.h"
 
 namespace ast
 {
-class FunctionStatement final : public Statement
-{
-public:
-    Function *value;
-    explicit FunctionStatement(parse::LocationRange locationRange, Function *value) noexcept
-        : Statement(locationRange),
-          value(value)
-    {
-    }
-};
 }

@@ -19,6 +19,40 @@
 
 #pragma once
 
+#include "statement.h"
+#include "comment.h"
+#include "expression.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class IfStatement final : public Statement
+{
+public:
+    ConsecutiveComments beforeIfComments;
+    ConsecutiveComments beforeLParenComments;
+    Expression *condition;
+    ConsecutiveComments beforeRParenComments;
+    Statement *thenStatement;
+    ConsecutiveComments beforeElseComments;
+    Statement *elseStatement;
+    explicit IfStatement(parse::LocationRange locationRange,
+                         ConsecutiveComments beforeIfComments,
+                         ConsecutiveComments beforeLParenComments,
+                         Expression *condition,
+                         ConsecutiveComments beforeRParenComments,
+                         Statement *thenStatement,
+                         ConsecutiveComments beforeElseComments,
+                         Statement *elseStatement) noexcept
+        : Statement(locationRange),
+          beforeIfComments(beforeIfComments),
+          beforeLParenComments(beforeLParenComments),
+          condition(condition),
+          beforeRParenComments(beforeRParenComments),
+          thenStatement(thenStatement),
+          beforeElseComments(beforeElseComments),
+          elseStatement(elseStatement)
+    {
+    }
+};
 }

@@ -19,6 +19,39 @@
 
 #pragma once
 
+#include "statement.h"
+#include "symbol.h"
+#include "comment.h"
+#include "type.h"
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+
 namespace ast
 {
+class TypeStatement final : public Statement, public Symbol
+{
+public:
+    ConsecutiveComments beforeTypeComments;
+    ConsecutiveComments beforeNameComments;
+    ConsecutiveComments beforeEqualComments;
+    Type *type;
+    ConsecutiveComments beforeSemicolonComments;
+    explicit TypeStatement(parse::LocationRange locationRange,
+                           ConsecutiveComments beforeTypeComments,
+                           ConsecutiveComments beforeNameComments,
+                           parse::LocationRange nameLocationRange,
+                           util::StringPool::Entry name,
+                           ConsecutiveComments beforeEqualComments,
+                           Type *type,
+                           ConsecutiveComments beforeSemicolonComments) noexcept
+        : Statement(locationRange),
+          Symbol(nameLocationRange, name),
+          beforeTypeComments(beforeTypeComments),
+          beforeNameComments(beforeNameComments),
+          beforeEqualComments(beforeEqualComments),
+          type(type),
+          beforeSemicolonComments(beforeSemicolonComments)
+    {
+    }
+};
 }

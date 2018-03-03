@@ -19,6 +19,46 @@
 
 #pragma once
 
+#include "statement.h"
+#include "comment.h"
+#include "input_output_statement_part.h"
+#include <vector>
+#include "../parse/source.h"
+
 namespace ast
 {
+class InputOutputStatement final : public Statement
+{
+public:
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        InputOutputStatementPart *part;
+        constexpr Part(ConsecutiveComments beforeCommaComments,
+                       InputOutputStatementPart *part) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              part(part)
+        {
+        }
+    };
+    ConsecutiveComments beforeInputOutputComments;
+    bool isInput;
+    InputOutputStatementPart *firstPart;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeSemicolonComments;
+    explicit InputOutputStatement(parse::LocationRange locationRange,
+                                  ConsecutiveComments beforeInputOutputComments,
+                                  bool isInput,
+                                  InputOutputStatementPart *firstPart,
+                                  std::vector<Part> parts,
+                                  ConsecutiveComments beforeSemicolonComments) noexcept
+        : Statement(locationRange),
+          beforeInputOutputComments(beforeInputOutputComments),
+          isInput(isInput),
+          firstPart(firstPart),
+          parts(std::move(parts)),
+          beforeSemicolonComments(beforeSemicolonComments)
+    {
+    }
+};
 }

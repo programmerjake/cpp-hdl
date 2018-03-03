@@ -19,6 +19,20 @@
 
 #pragma once
 
+#include "statement.h"
+#include "enum.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class EnumStatement final : public Statement
+{
+public:
+    Enum *value;
+    explicit EnumStatement(parse::LocationRange locationRange, Enum *value) noexcept
+        : Statement(locationRange),
+          value(value)
+    {
+    }
+};
 }

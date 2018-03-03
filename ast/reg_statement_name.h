@@ -19,19 +19,28 @@
 
 #pragma once
 
-#include "statement.h"
-#include "function.h"
-#include "../parse/source.h"
+#include "node.h"
+#include "symbol.h"
+#include "comment.h"
 
 namespace ast
 {
-class FunctionStatement final : public Statement
+class RegStatementPart;
+
+class RegStatementName final : public Node, public Symbol
 {
 public:
-    Function *value;
-    explicit FunctionStatement(parse::LocationRange locationRange, Function *value) noexcept
-        : Statement(locationRange),
-          value(value)
+    ConsecutiveComments beforeNameComments;
+    RegStatementPart *parentPart;
+    explicit RegStatementName(parse::LocationRange locationRange,
+                              ConsecutiveComments beforeNameComments,
+                              parse::LocationRange nameLocationRange,
+                              util::StringPool::Entry name,
+                              RegStatementPart *parentPart = nullptr) noexcept
+        : Node(locationRange),
+          Symbol(nameLocationRange, name),
+          beforeNameComments(beforeNameComments),
+          parentPart(parentPart)
     {
     }
 };

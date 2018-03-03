@@ -19,6 +19,20 @@
 
 #pragma once
 
+#include "statement.h"
+#include "module.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class ModuleStatement final : public Statement
+{
+public:
+    Module *value;
+    explicit ModuleStatement(parse::LocationRange locationRange, Module *value) noexcept
+        : Statement(locationRange),
+          value(value)
+    {
+    }
+};
 }

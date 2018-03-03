@@ -127,7 +127,7 @@ struct Parser
         while(peek().token.type != TokenType::RBrace && peek().token.type != TokenType::EndOfFile)
             statements.push_back(parseStatement());
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
-        auto closingLBrace = matchAndGet(TokenType::RBrace);
+        auto closingRBrace = matchAndGet(TokenType::RBrace);
         return create<ast::Module>(locationRange,
                                    moduleKeyword.comments,
                                    moduleName.comments,
@@ -138,7 +138,7 @@ struct Parser
                                    parentType,
                                    openingLBrace.comments,
                                    std::move(statements),
-                                   closingLBrace.comments);
+                                   closingRBrace.comments);
     }
     ast::TemplateParameters *parseTemplateParameters()
     {
@@ -248,7 +248,7 @@ struct Parser
         while(peek().token.type != TokenType::RBrace && peek().token.type != TokenType::EndOfFile)
             statements.push_back(parseStatement());
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
-        auto closingLBrace = matchAndGet(TokenType::RBrace);
+        auto closingRBrace = matchAndGet(TokenType::RBrace);
         return create<ast::Interface>(locationRange,
                                       interfaceKeyword.comments,
                                       interfaceName.comments,
@@ -259,7 +259,7 @@ struct Parser
                                       parentType,
                                       openingLBrace.comments,
                                       std::move(statements),
-                                      closingLBrace.comments);
+                                      closingRBrace.comments);
     }
     ast::Enum *parseEnum()
     {
@@ -311,11 +311,69 @@ struct Parser
     }
     ast::Function *parseFunction()
     {
-#error finish
+        auto functionKeyword = matchAndGet(TokenType::Function);
+        auto functionName = matchAndGet(TokenType::Identifier, "expected: function name");
+        ast::TemplateParameters *templateParameters = nullptr;
+        if(peek().token.type == TokenType::LAngle)
+            templateParameters = parseTemplateParameters();
+        auto openingLParen = matchAndGet(TokenType::LParen);
+        ast::FunctionParameter *firstParameter = nullptr;
+        std::vector<ast::Function::Parameter> parameters;
+        if(peek().token.type != TokenType::RParen)
+        {
+            firstParameter = parseFunctionParameter();
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parameters.push_back({commaToken.comments, parseFunctionParameter()});
+            }
+        }
+        auto closingRParen = matchAndGet(TokenType::RParen);
+        CommentsAndToken colonToken = {};
+        ast::Type *returnType = nullptr;
+        if(peek().token.type == TokenType::Colon)
+        {
+            colonToken = get();
+            returnType = parseType();
+        }
+        auto openingLBrace = matchAndGet(TokenType::LBrace);
+        std::vector<ast::Statement *> statements;
+        while(peek().token.type != TokenType::RBrace && peek().token.type != TokenType::EndOfFile)
+            statements.push_back(parseStatement());
+        auto closingRBrace = matchAndGet(TokenType::RBrace);
+        LocationRange locationRange(functionKeyword.token.locationRange.begin(),
+                                    closingRBrace.token.locationRange.end());
+        return create<ast::Function>(locationRange,
+                                     functionKeyword.comments,
+                                     functionName.comments,
+                                     functionName.token.locationRange,
+                                     context.stringPool.intern(functionName.token.getText()),
+                                     templateParameters,
+                                     openingLParen.comments,
+                                     firstParameter,
+                                     std::move(parameters),
+                                     closingRParen.comments,
+                                     colonToken.comments,
+                                     returnType,
+                                     openingLBrace.comments,
+                                     std::move(statements),
+                                     closingRBrace.comments);
     }
     ast::FunctionParameter *parseFunctionParameter()
     {
-#error finish
+        auto parameterName =
+            matchAndGet(TokenType::Identifier, "expected: function parameter name");
+        auto colonToken = matchAndGet(TokenType::Colon);
+        auto *type = parseType();
+        LocationRange locationRange(parameterName.token.locationRange.begin(),
+                                    type->locationRange.end());
+        return create<ast::FunctionParameter>(
+            locationRange,
+            parameterName.comments,
+            parameterName.token.locationRange,
+            context.stringPool.intern(parameterName.token.getText()),
+            colonToken.comments,
+            type);
     }
     ast::Statement *parseStatement()
     {
@@ -343,34 +401,130 @@ struct Parser
         }
         case TokenType::Type:
         {
-#error finish
-            break;
+            auto typeKeyword = get();
+            auto typeName = matchAndGet(TokenType::Identifier, "expected: type name");
+            auto equalToken = matchAndGet(TokenType::Equal);
+            auto *type = parseType();
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            return create<ast::TypeStatement>(
+                LocationRange(typeKeyword.token.locationRange.begin(),
+                              finalSemicolon.token.locationRange.end()),
+                typeKeyword.comments,
+                typeName.comments,
+                typeName.token.locationRange,
+                context.stringPool.intern(typeName.token.getText()),
+                equalToken.comments,
+                type,
+                finalSemicolon.comments);
         }
         case TokenType::Const:
         {
-#error finish
-            break;
+            auto constKeyword = get();
+            auto *firstPart = parseConstStatementPart();
+            std::vector<ast::ConstStatement::Part> parts;
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseConstStatementPart()});
+            }
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            return create<ast::ConstStatement>(
+                LocationRange(constKeyword.token.locationRange.begin(),
+                              finalSemicolon.token.locationRange.end()),
+                constKeyword.comments,
+                firstPart,
+                std::move(parts),
+                finalSemicolon.comments);
         }
         case TokenType::Let:
         {
-#error finish
-            break;
+            auto letKeyword = get();
+            auto *firstPart = parseLetStatementPart();
+            std::vector<ast::LetStatement::Part> parts;
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseLetStatementPart()});
+            }
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            return create<ast::LetStatement>(
+                LocationRange(letKeyword.token.locationRange.begin(),
+                              finalSemicolon.token.locationRange.end()),
+                letKeyword.comments,
+                firstPart,
+                std::move(parts),
+                finalSemicolon.comments);
         }
         case TokenType::Input:
         case TokenType::Output:
         {
-#error finish
-            break;
+            auto inputOutputToken = get();
+            bool isInput = inputOutputToken.token.type == TokenType::Input;
+            auto *firstPart = parseInputOutputStatementPart();
+            std::vector<ast::InputOutputStatement::Part> parts;
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseInputOutputStatementPart()});
+            }
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            auto *retval = create<ast::InputOutputStatement>(
+                LocationRange(inputOutputToken.token.locationRange.begin(),
+                              finalSemicolon.token.locationRange.end()),
+                inputOutputToken.comments,
+                isInput,
+                firstPart,
+                std::move(parts),
+                finalSemicolon.comments);
+            firstPart->parentStatement = retval;
+            for(auto &part : retval->parts)
+                part.part->parentStatement = retval;
+            return retval;
         }
         case TokenType::Reg:
         {
-#error finish
-            break;
+            auto regKeyword = get();
+            auto *firstPart = parseRegStatementPart();
+            std::vector<ast::RegStatement::Part> parts;
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseRegStatementPart()});
+            }
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            return create<ast::RegStatement>(
+                LocationRange(regKeyword.token.locationRange.begin(),
+                              finalSemicolon.token.locationRange.end()),
+                regKeyword.comments,
+                firstPart,
+                std::move(parts),
+                finalSemicolon.comments);
         }
         case TokenType::If:
         {
-#error finish
-            break;
+            auto ifToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *condition = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            auto *thenStatement = parseStatement();
+            LocationRange locationRange(ifToken.token.locationRange.begin(),
+                                        thenStatement->locationRange.end());
+            CommentsAndToken elseToken = {};
+            ast::Statement *elseStatement = nullptr;
+            if(peek().token.type == TokenType::Else)
+            {
+                elseToken = get();
+                elseStatement = parseStatement();
+                locationRange.setEnd(elseStatement->locationRange.end());
+            }
+            return create<ast::IfStatement>(locationRange,
+                                            ifToken.comments,
+                                            openingLParen.comments,
+                                            condition,
+                                            closingRParen.comments,
+                                            thenStatement,
+                                            elseToken.comments,
+                                            elseStatement);
         }
         case TokenType::For:
         {

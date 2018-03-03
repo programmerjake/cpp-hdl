@@ -56,7 +56,7 @@ public:
     ConsecutiveComments beforeColonComments;
     Type *returnType;
     ConsecutiveComments beforeLBraceComments;
-    std::vector<Statement> statements;
+    std::vector<Statement *> statements;
     ConsecutiveComments beforeRBraceComments;
     explicit Function(parse::LocationRange locationRange,
                       ConsecutiveComments beforeFunctionComments,
@@ -71,7 +71,7 @@ public:
                       ConsecutiveComments beforeColonComments,
                       Type *returnType,
                       ConsecutiveComments beforeLBraceComments,
-                      std::vector<Statement> statements,
+                      std::vector<Statement *> statements,
                       ConsecutiveComments beforeRBraceComments) noexcept
         : Node(locationRange),
           Symbol(nameLocationRange, name),

@@ -19,6 +19,49 @@
 
 #pragma once
 
+#include "node.h"
+#include "comment.h"
+#include "input_output_statement_name.h"
+#include <vector>
+#include "type.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class InputOutputStatement;
+
+class InputOutputStatementPart final : public Node
+{
+public:
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        InputOutputStatementName *name;
+        constexpr Part(ConsecutiveComments beforeCommaComments,
+                       InputOutputStatementName *name) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              name(name)
+        {
+        }
+    };
+    InputOutputStatementName *firstName;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeColonComments;
+    Type *type;
+    InputOutputStatement *parentStatement;
+    explicit InputOutputStatementPart(parse::LocationRange locationRange,
+                                      InputOutputStatementName *firstName,
+                                      std::vector<Part> parts,
+                                      ConsecutiveComments beforeColonComments,
+                                      Type *type,
+                                      InputOutputStatement *parentStatement = nullptr) noexcept
+        : Node(locationRange),
+          firstName(firstName),
+          parts(std::move(parts)),
+          beforeColonComments(beforeColonComments),
+          type(type),
+          parentStatement(parentStatement)
+    {
+    }
+};
 }
