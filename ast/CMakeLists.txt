@@ -59,6 +59,7 @@ set(SOURCES
     list_expression.cpp
     match_pattern.cpp
     match_statement.cpp
+    match_statement_part.cpp
     memory_type.cpp
     module.cpp
     module_statement.cpp

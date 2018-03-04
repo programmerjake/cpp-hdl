@@ -528,18 +528,96 @@ struct Parser
         }
         case TokenType::For:
         {
-#error finish
-            break;
+            auto forKeyword = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            if(peek().token.type == TokenType::Type)
+            {
+                auto typeKeyword = get();
+                auto typeName = matchAndGet(TokenType::Identifier, "expected: for type name");
+                auto inKeyword = matchAndGet(TokenType::In);
+                auto *type = parseType();
+                auto closingRParen = matchAndGet(TokenType::RParen);
+                auto *statement = parseStatement();
+                LocationRange locationRange(forKeyword.token.locationRange.begin(),
+                                            statement->locationRange.end());
+                return create<ast::ForTypeStatement>(
+                    locationRange,
+                    forKeyword.comments,
+                    openingLParen.comments,
+                    typeKeyword.comments,
+                    typeName.comments,
+                    typeName.token.locationRange,
+                    context.stringPool.intern(typeName.token.getText()),
+                    inKeyword.comments,
+                    type,
+                    closingRParen.comments,
+                    statement);
+            }
+            auto variableName = matchAndGet(TokenType::Identifier, "expected: for variable name");
+            auto inKeyword = matchAndGet(TokenType::In);
+            auto *firstExpression = parseExpression();
+            CommentsAndToken toKeyword = {};
+            ast::Expression *secondExpression = nullptr;
+            if(peek().token.type == TokenType::To)
+            {
+                toKeyword = get();
+                secondExpression = parseExpression();
+            }
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            auto *statement = parseStatement();
+            LocationRange locationRange(forKeyword.token.locationRange.begin(),
+                                        statement->locationRange.end());
+            return create<ast::ForStatement>(
+                locationRange,
+                forKeyword.comments,
+                openingLParen.comments,
+                variableName.comments,
+                variableName.token.locationRange,
+                context.stringPool.intern(variableName.token.getText()),
+                inKeyword.comments,
+                firstExpression,
+                toKeyword.comments,
+                secondExpression,
+                closingRParen.comments,
+                statement);
         }
         case TokenType::Match:
         {
-#error finish
-            break;
+            auto matchToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *matchee = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            auto openingLBrace = matchAndGet(TokenType::LBrace);
+            std::vector<ast::MatchStatementPart *> parts;
+            while(peek().token.type != TokenType::RBrace
+                  && peek().token.type != TokenType::EndOfFile)
+                parts.push_back(parseMatchStatementPart());
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            LocationRange locationRange(matchToken.token.locationRange.begin(),
+                                        closingRBrace.token.locationRange.end());
+            return create<ast::MatchStatement>(locationRange,
+                                               matchToken.comments,
+                                               openingLParen.comments,
+                                               matchee,
+                                               closingRParen.comments,
+                                               openingLBrace.comments,
+                                               std::move(parts),
+                                               closingRBrace.comments);
         }
         case TokenType::LBrace:
         {
-#error finish
-            break;
+            auto openingLBrace = get();
+            std::vector<ast::Statement *> statements;
+            while(peek().token.type != TokenType::RBrace
+                  && peek().token.type != TokenType::EndOfFile)
+                statements.push_back(parseStatement());
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            LocationRange locationRange(openingLBrace.token.locationRange.begin(),
+                                        closingRBrace.token.locationRange.end());
+            return create<ast::BlockStatement>(locationRange,
+                                               openingLBrace.comments,
+                                               std::move(statements),
+                                               closingRBrace.comments);
         }
         case TokenType::Return:
         {

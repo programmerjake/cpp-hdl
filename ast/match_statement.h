@@ -19,6 +19,41 @@
 
 #pragma once
 
+#include "statement.h"
+#include "comment.h"
+#include "expression.h"
+#include <vector>
+#include "match_statement_part.h"
+
 namespace ast
 {
+class MatchStatement final : public Statement
+{
+public:
+    ConsecutiveComments beforeMatchComments;
+    ConsecutiveComments beforeLParenComments;
+    Expression *matchee;
+    ConsecutiveComments beforeRParenComments;
+    ConsecutiveComments beforeLBraceComments;
+    std::vector<MatchStatementPart *> parts;
+    ConsecutiveComments beforeRBraceComments;
+    explicit MatchStatement(parse::LocationRange locationRange,
+                            ConsecutiveComments beforeMatchComments,
+                            ConsecutiveComments beforeLParenComments,
+                            Expression *matchee,
+                            ConsecutiveComments beforeRParenComments,
+                            ConsecutiveComments beforeLBraceComments,
+                            std::vector<MatchStatementPart *> parts,
+                            ConsecutiveComments beforeRBraceComments) noexcept
+        : Statement(locationRange),
+          beforeMatchComments(beforeMatchComments),
+          beforeLParenComments(beforeLParenComments),
+          matchee(matchee),
+          beforeRParenComments(beforeRParenComments),
+          beforeLBraceComments(beforeLBraceComments),
+          parts(parts),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }

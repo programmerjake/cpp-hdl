@@ -207,8 +207,11 @@ struct Tokenizer::TokenParser
         if(isDigit(peek()))
         {
             auto tokenType = TokenType::UnprefixedDecimalLiteralInteger;
+            TokenType patternTokenType{};
             bool hasDigits = true;
             int base = 10;
+            bool patternAllowed = false;
+            bool isPattern = false;
             if(peek() == '0')
             {
                 get();
@@ -216,6 +219,8 @@ struct Tokenizer::TokenParser
                 {
                     hasDigits = false;
                     tokenType = TokenType::BinaryLiteralInteger;
+                    patternAllowed = true;
+                    patternTokenType = TokenType::BinaryLiteralIntegerPattern;
                     get();
                     base = 2;
                 }
@@ -223,6 +228,8 @@ struct Tokenizer::TokenParser
                 {
                     hasDigits = false;
                     tokenType = TokenType::HexadecimalLiteralInteger;
+                    patternAllowed = true;
+                    patternTokenType = TokenType::HexadecimalLiteralIntegerPattern;
                     get();
                     base = 16;
                 }
@@ -230,6 +237,8 @@ struct Tokenizer::TokenParser
                 {
                     hasDigits = false;
                     tokenType = TokenType::OctalLiteralInteger;
+                    patternAllowed = true;
+                    patternTokenType = TokenType::OctalLiteralIntegerPattern;
                     get();
                     base = 8;
                 }
@@ -250,15 +259,24 @@ struct Tokenizer::TokenParser
                     return Token(tokenType, LocationRange(startLocation, currentLocation));
                 }
             }
-            while(getDigitValue(peek(), base) >= 0)
+            constexpr IntType wildcardChar = '?';
+            while(getDigitValue(peek(), base) >= 0 || peek() == wildcardChar)
             {
-                get();
+                if(get() == wildcardChar)
+                {
+                    if(!patternAllowed)
+                        throw ParseError(currentLocation,
+                                         "wildcard is not legal in decimal integer");
+                    isPattern = true;
+                }
                 hasDigits = true;
             }
             if(getDigitValue(peek()) >= base)
                 throw ParseError(currentLocation, "digit too big for number");
             if(!hasDigits)
                 throw ParseError(currentLocation, "number is missing digits after base indicator");
+            if(isPattern)
+                tokenType = patternTokenType;
             return Token(tokenType, LocationRange(startLocation, currentLocation));
         }
         switch(peek())

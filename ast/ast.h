@@ -58,6 +58,7 @@
 #include "list_expression.h"
 #include "match_pattern.h"
 #include "match_statement.h"
+#include "match_statement_part.h"
 #include "memory_type.h"
 #include "module.h"
 #include "module_statement.h"

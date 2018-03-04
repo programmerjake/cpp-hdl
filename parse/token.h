@@ -35,6 +35,9 @@ enum class TokenType : std::uint_fast8_t
     HexadecimalLiteralInteger,
     OctalLiteralInteger,
     BinaryLiteralInteger,
+    HexadecimalLiteralIntegerPattern,
+    OctalLiteralIntegerPattern,
+    BinaryLiteralIntegerPattern,
 
     Bit,
     Break,
@@ -133,6 +136,12 @@ struct Token final
             return "<OctalLiteralInteger>"_sv;
         case Type::BinaryLiteralInteger:
             return "<BinaryLiteralInteger>"_sv;
+        case Type::HexadecimalLiteralIntegerPattern:
+            return "<HexadecimalLiteralIntegerPattern>"_sv;
+        case Type::OctalLiteralIntegerPattern:
+            return "<OctalLiteralIntegerPattern>"_sv;
+        case Type::BinaryLiteralIntegerPattern:
+            return "<BinaryLiteralIntegerPattern>"_sv;
         case Type::Bit:
             return "bit"_sv;
         case Type::Break:
@@ -291,7 +300,23 @@ struct Token final
                                                                        locationRange(locationRange)
     {
     }
-    math::GMPInteger getIntegerValue() const;
+    struct IntegerValue
+    {
+        math::GMPInteger value;
+        math::GMPInteger mask;
+        IntegerValue() noexcept : value(), mask()
+        {
+        }
+        IntegerValue(math::GMPInteger value, math::GMPInteger mask) noexcept
+            : value(std::move(value)),
+              mask(std::move(mask))
+        {
+        }
+        IntegerValue(math::GMPInteger value) noexcept : value(std::move(value)), mask(-1L)
+        {
+        }
+    };
+    IntegerValue getIntegerValue() const;
     static constexpr bool isComment(Type type) noexcept
     {
         switch(type)
