@@ -621,29 +621,44 @@ struct Parser
         }
         case TokenType::Return:
         {
-#error finish
-            break;
+            auto returnKeyword = get();
+            ast::Expression *expression = nullptr;
+            if(peek().token.type != TokenType::Semicolon)
+                expression = parseExpression();
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            LocationRange locationRange(returnKeyword.token.locationRange.begin(),
+                                        finalSemicolon.token.locationRange.end());
+            return create<ast::ReturnStatement>(
+                locationRange, returnKeyword.comments, expression, finalSemicolon.comments);
         }
         case TokenType::Break:
         {
-#error finish
-            break;
+            auto breakKeyword = get();
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            LocationRange locationRange(breakKeyword.token.locationRange.begin(),
+                                        finalSemicolon.token.locationRange.end());
+            return create<ast::BreakStatement>(
+                locationRange, breakKeyword.comments, finalSemicolon.comments);
         }
         case TokenType::Continue:
         {
-#error finish
-            break;
+            auto continueKeyword = get();
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            LocationRange locationRange(continueKeyword.token.locationRange.begin(),
+                                        finalSemicolon.token.locationRange.end());
+            return create<ast::ContinueStatement>(
+                locationRange, continueKeyword.comments, finalSemicolon.comments);
         }
         case TokenType::Semicolon:
         {
-#error finish
-            break;
+            auto finalSemicolon = get();
+            return create<ast::EmptyStatement>(finalSemicolon.token.locationRange,
+                                               finalSemicolon.comments);
         }
         default:
         {
             auto *expression = parseExpression();
-#error finish
-            break;
+            return create<ast::ExpressionStatement>(expression->locationRange, expression);
         }
         }
     }

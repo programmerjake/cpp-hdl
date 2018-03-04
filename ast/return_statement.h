@@ -19,6 +19,27 @@
 
 #pragma once
 
+#include "statement.h"
+#include "comment.h"
+#include "expression.h"
+
 namespace ast
 {
+class ReturnStatement final : public Statement
+{
+public:
+    ConsecutiveComments beforeReturnComments;
+    Expression *expression;
+    ConsecutiveComments beforeSemicolonComments;
+    explicit ReturnStatement(parse::LocationRange locationRange,
+                             ConsecutiveComments beforeReturnComments,
+                             Expression *expression,
+                             ConsecutiveComments beforeSemicolonComments) noexcept
+        : Statement(locationRange),
+          beforeReturnComments(beforeReturnComments),
+          expression(expression),
+          beforeSemicolonComments(beforeSemicolonComments)
+    {
+    }
+};
 }
