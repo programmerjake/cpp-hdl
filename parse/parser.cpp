@@ -1631,7 +1631,280 @@ struct Parser
     }
     ast::Type *parseType()
     {
-#error finish
+        switch(peek().token.type)
+        {
+        case TokenType::ColonColon:
+        case TokenType::Identifier:
+        {
+            auto *scopedId = parseScopedId();
+            return create<ast::ScopedIdType>(scopedId->locationRange, scopedId);
+        }
+        case TokenType::Flip:
+        {
+            auto flipToken = get();
+            auto *type = parseType();
+            LocationRange locationRange(flipToken.token.locationRange.begin(),
+                                        type->locationRange.end());
+            return create<ast::FlipType>(locationRange, flipToken.comments, type);
+        }
+        case TokenType::TypeOf:
+        {
+            auto typeOfToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *expression = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::TypeOfType>(LocationRange(typeOfToken.token.locationRange.begin(),
+                                                         closingRParen.token.locationRange.end()),
+                                           typeOfToken.comments,
+                                           openingLParen.comments,
+                                           expression,
+                                           closingRParen.comments);
+        }
+        case TokenType::UInt:
+        {
+            auto uintToken = get();
+            auto openingLBrace = matchAndGet(TokenType::LBrace);
+            auto *bitCount = parseExpression();
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            return create<ast::UIntType>(LocationRange(uintToken.token.locationRange.begin(),
+                                                       closingRBrace.token.locationRange.end()),
+                                         uintToken.comments,
+                                         openingLBrace.comments,
+                                         bitCount,
+                                         closingRBrace.comments);
+        }
+        case TokenType::SInt:
+        {
+            auto sintToken = get();
+            auto openingLBrace = matchAndGet(TokenType::LBrace);
+            auto *bitCount = parseExpression();
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            return create<ast::SIntType>(LocationRange(sintToken.token.locationRange.begin(),
+                                                       closingRBrace.token.locationRange.end()),
+                                         sintToken.comments,
+                                         openingLBrace.comments,
+                                         bitCount,
+                                         closingRBrace.comments);
+        }
+        case TokenType::U8:
+        {
+            auto u8Token = get();
+            return create<ast::U8Type>(u8Token.token.locationRange, u8Token.comments);
+        }
+        case TokenType::U16:
+        {
+            auto u16Token = get();
+            return create<ast::U16Type>(u16Token.token.locationRange, u16Token.comments);
+        }
+        case TokenType::U32:
+        {
+            auto u32Token = get();
+            return create<ast::U32Type>(u32Token.token.locationRange, u32Token.comments);
+        }
+        case TokenType::U64:
+        {
+            auto u64Token = get();
+            return create<ast::U64Type>(u64Token.token.locationRange, u64Token.comments);
+        }
+        case TokenType::S8:
+        {
+            auto s8Token = get();
+            return create<ast::S8Type>(s8Token.token.locationRange, s8Token.comments);
+        }
+        case TokenType::S16:
+        {
+            auto s16Token = get();
+            return create<ast::S16Type>(s16Token.token.locationRange, s16Token.comments);
+        }
+        case TokenType::S32:
+        {
+            auto s32Token = get();
+            return create<ast::S32Type>(s32Token.token.locationRange, s32Token.comments);
+        }
+        case TokenType::S64:
+        {
+            auto s64Token = get();
+            return create<ast::S64Type>(s64Token.token.locationRange, s64Token.comments);
+        }
+        case TokenType::Bit:
+        {
+            auto bitToken = get();
+            return create<ast::BitType>(bitToken.token.locationRange, bitToken.comments);
+        }
+        case TokenType::Memory:
+        {
+            auto memoryToken = get();
+            auto openingLBracket = matchAndGet(TokenType::LBracket);
+            auto *size = parseExpression();
+            auto closingRBracket = matchAndGet(TokenType::RBracket);
+            auto colonToken = matchAndGet(TokenType::Colon);
+            auto *elementType = parseType();
+            LocationRange locationRange(memoryToken.token.locationRange.begin(),
+                                        elementType->locationRange.end());
+            return create<ast::MemoryType>(locationRange,
+                                           memoryToken.comments,
+                                           openingLBracket.comments,
+                                           size,
+                                           closingRBracket.comments,
+                                           colonToken.comments,
+                                           elementType);
+        }
+        case TokenType::LBrace:
+        {
+            auto openingLBrace = get();
+            bool hasTrailingComma = false;
+            std::vector<ast::TupleType::Part> parts;
+            while(peek().token.type != TokenType::RBrace
+                  || peek().token.type != TokenType::EndOfFile)
+            {
+                auto *type = parseType();
+                if(peek().token.type == TokenType::Comma)
+                {
+                    hasTrailingComma = true;
+                    parts.push_back({type, get().comments});
+                    continue;
+                }
+                hasTrailingComma = false;
+                parts.push_back({type, {}});
+                break;
+            }
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            return create<ast::TupleType>(LocationRange(openingLBrace.token.locationRange.begin(),
+                                                        closingRBrace.token.locationRange.end()),
+                                          openingLBrace.comments,
+                                          std::move(parts),
+                                          hasTrailingComma,
+                                          closingRBrace.comments);
+        }
+        case TokenType::Function:
+        {
+            auto functionToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto parseParameter = [&]() -> ast::FunctionType::Parameter
+            {
+                if(peek().token.type == TokenType::Identifier)
+                {
+                    auto tempTokenizer = tokenizer;
+                    auto name = tempTokenizer.get();
+                    if(tempTokenizer.peek().token.type == TokenType::Colon)
+                    {
+                        tokenizer = tempTokenizer;
+                        auto colonToken = get();
+                        auto *type = parseType();
+                        return {name.comments,
+                                name.token.locationRange,
+                                context.stringPool.intern(name.token.getText()),
+                                colonToken.comments,
+                                type};
+                    }
+                }
+                return {{}, {}, {}, {}, parseType()};
+            };
+            ast::FunctionType::Parameter firstParameter{};
+            std::vector<ast::FunctionType::Part> parts;
+            if(peek().token.type != TokenType::RParen)
+            {
+                firstParameter = parseParameter();
+                while(peek().token.type == TokenType::Comma)
+                {
+                    auto commaToken = get();
+                    parts.push_back({commaToken.comments, parseParameter()});
+                }
+            }
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            LocationRange locationRange(functionToken.token.locationRange.begin(),
+                                        closingRParen.token.locationRange.end());
+            CommentsAndToken colonToken = {};
+            ast::Type *returnType = nullptr;
+            if(peek().token.type == TokenType::Colon)
+            {
+                colonToken = get();
+                returnType = parseType();
+                locationRange.setEnd(returnType->locationRange.end());
+            }
+            return create<ast::FunctionType>(locationRange,
+                                             functionToken.comments,
+                                             openingLParen.comments,
+                                             std::move(firstParameter),
+                                             std::move(parts),
+                                             closingRParen.comments,
+                                             colonToken.comments,
+                                             returnType);
+        }
+        case TokenType::EndOfFile:
+        case TokenType::UnprefixedDecimalLiteralInteger:
+        case TokenType::DecimalLiteralInteger:
+        case TokenType::HexadecimalLiteralInteger:
+        case TokenType::OctalLiteralInteger:
+        case TokenType::BinaryLiteralInteger:
+        case TokenType::HexadecimalLiteralIntegerPattern:
+        case TokenType::OctalLiteralIntegerPattern:
+        case TokenType::BinaryLiteralIntegerPattern:
+        case TokenType::Break:
+        case TokenType::Cast:
+        case TokenType::Cat:
+        case TokenType::Const:
+        case TokenType::Continue:
+        case TokenType::Else:
+        case TokenType::Enum:
+        case TokenType::Fill:
+        case TokenType::For:
+        case TokenType::From:
+        case TokenType::If:
+        case TokenType::Implements:
+        case TokenType::Import:
+        case TokenType::In:
+        case TokenType::Input:
+        case TokenType::Interface:
+        case TokenType::Let:
+        case TokenType::Match:
+        case TokenType::Module:
+        case TokenType::Output:
+        case TokenType::PopCount:
+        case TokenType::Reg:
+        case TokenType::Return:
+        case TokenType::To:
+        case TokenType::Type:
+        case TokenType::BlockComment:
+        case TokenType::LineComment:
+        case TokenType::FSlash:
+        case TokenType::RBrace:
+        case TokenType::LBracket:
+        case TokenType::RBracket:
+        case TokenType::LParen:
+        case TokenType::RParen:
+        case TokenType::Comma:
+        case TokenType::Colon:
+        case TokenType::Semicolon:
+        case TokenType::Tilde:
+        case TokenType::EMark:
+        case TokenType::Percent:
+        case TokenType::Caret:
+        case TokenType::Amp:
+        case TokenType::Star:
+        case TokenType::Minus:
+        case TokenType::Equal:
+        case TokenType::Plus:
+        case TokenType::VBar:
+        case TokenType::Dot:
+        case TokenType::LAngle:
+        case TokenType::RAngle:
+        case TokenType::QMark:
+        case TokenType::DotDotDot:
+        case TokenType::EqualRAngle:
+        case TokenType::LAngleLAngle:
+        case TokenType::RAngleRAngle:
+        case TokenType::LAngleEqual:
+        case TokenType::RAngleEqual:
+        case TokenType::EqualEqual:
+        case TokenType::EMarkEqual:
+        case TokenType::AmpAmp:
+        case TokenType::VBarVBar:
+        case TokenType::LAngleMinusRAngle:
+            break;
+        }
+        reportError(peek().token.locationRange, "expected: type");
+        return nullptr;
     }
 };
 

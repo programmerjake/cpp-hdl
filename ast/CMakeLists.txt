@@ -82,6 +82,7 @@ set(SOURCES
     template_parameter.cpp
     template_parameters.cpp
     top_level_module.cpp
+    tuple_type.cpp
     type.cpp
     type_of_type.cpp
     type_statement.cpp

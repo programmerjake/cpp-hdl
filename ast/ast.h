@@ -84,6 +84,7 @@
 #include "template_parameter.h"
 #include "template_parameters.h"
 #include "top_level_module.h"
+#include "tuple_type.h"
 #include "type.h"
 #include "type_of_type.h"
 #include "type_statement.h"

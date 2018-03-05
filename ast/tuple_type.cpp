@@ -17,22 +17,8 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "type.h"
-#include "scoped_id.h"
-#include "../parse/source.h"
+#include "tuple_type.h"
 
 namespace ast
 {
-class ScopedIdType final : public Type
-{
-public:
-    ScopedId *value;
-    explicit ScopedIdType(parse::LocationRange locationRange, ScopedId *value) noexcept
-        : Type(locationRange),
-          value(value)
-    {
-    }
-};
 }

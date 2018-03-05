@@ -19,6 +19,23 @@
 
 #pragma once
 
+#include "type.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class FlipType final : public Type
+{
+public:
+    ConsecutiveComments beforeFlipComments;
+    Type *type;
+    explicit FlipType(parse::LocationRange locationRange,
+                      ConsecutiveComments beforeFlipComments,
+                      Type *type) noexcept : Type(locationRange),
+                                             beforeFlipComments(beforeFlipComments),
+                                             type(type)
+    {
+    }
+};
 }

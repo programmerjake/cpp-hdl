@@ -19,6 +19,76 @@
 
 #pragma once
 
+#include "type.h"
+#include "../parse/source.h"
+#include "../util/string_pool.h"
+#include "comment.h"
+#include <vector>
+
 namespace ast
 {
+class FunctionType final : public Type
+{
+public:
+    struct Parameter
+    {
+        ConsecutiveComments beforeNameComments;
+        parse::LocationRange nameLocationRange;
+        util::StringPool::Entry name;
+        ConsecutiveComments beforeColonComments;
+        Type *type;
+        constexpr Parameter() noexcept : beforeNameComments(),
+                                         nameLocationRange(),
+                                         name(),
+                                         beforeColonComments(),
+                                         type()
+        {
+        }
+        constexpr Parameter(ConsecutiveComments beforeNameComments,
+                            parse::LocationRange nameLocationRange,
+                            util::StringPool::Entry name,
+                            ConsecutiveComments beforeColonComments,
+                            Type *type) noexcept : beforeNameComments(beforeNameComments),
+                                                   nameLocationRange(nameLocationRange),
+                                                   name(name),
+                                                   beforeColonComments(beforeColonComments),
+                                                   type(type)
+        {
+        }
+    };
+    struct Part : public Parameter
+    {
+        ConsecutiveComments beforeCommaComments;
+        constexpr Part(ConsecutiveComments beforeCommaComments, Parameter parameter) noexcept
+            : Parameter(parameter),
+              beforeCommaComments(beforeCommaComments)
+        {
+        }
+    };
+    ConsecutiveComments beforeFunctionComments;
+    ConsecutiveComments beforeLParenComments;
+    Parameter firstParameter;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeRParenComments;
+    ConsecutiveComments beforeColonComments;
+    Type *returnType;
+    explicit FunctionType(parse::LocationRange locationRange,
+                          ConsecutiveComments beforeFunctionComments,
+                          ConsecutiveComments beforeLParenComments,
+                          Parameter firstParameter,
+                          std::vector<Part> parts,
+                          ConsecutiveComments beforeRParenComments,
+                          ConsecutiveComments beforeColonComments,
+                          Type *returnType) noexcept
+        : Type(locationRange),
+          beforeFunctionComments(beforeFunctionComments),
+          beforeLParenComments(beforeLParenComments),
+          firstParameter(firstParameter),
+          parts(parts),
+          beforeRParenComments(beforeRParenComments),
+          beforeColonComments(beforeColonComments),
+          returnType(returnType)
+    {
+    }
+};
 }

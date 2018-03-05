@@ -19,6 +19,174 @@
 
 #pragma once
 
+#include "type.h"
+#include "../parse/source.h"
+#include "comment.h"
+#include "expression.h"
+
 namespace ast
 {
+class IntegerType : public Type
+{
+public:
+    const bool isSigned;
+    explicit IntegerType(parse::LocationRange locationRange, bool isSigned) noexcept
+        : Type(locationRange),
+          isSigned(isSigned)
+    {
+    }
+};
+
+class UIntType final : public IntegerType
+{
+public:
+    ConsecutiveComments beforeUIntComments;
+    ConsecutiveComments beforeLBraceComments;
+    Expression *bitCount;
+    ConsecutiveComments beforeRBraceComments;
+    explicit UIntType(parse::LocationRange locationRange,
+                      ConsecutiveComments beforeUIntComments,
+                      ConsecutiveComments beforeLBraceComments,
+                      Expression *bitCount,
+                      ConsecutiveComments beforeRBraceComments) noexcept
+        : IntegerType(locationRange, false),
+          beforeUIntComments(beforeUIntComments),
+          beforeLBraceComments(beforeLBraceComments),
+          bitCount(bitCount),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
+
+class SIntType final : public IntegerType
+{
+public:
+    ConsecutiveComments beforeSIntComments;
+    ConsecutiveComments beforeLBraceComments;
+    Expression *bitCount;
+    ConsecutiveComments beforeRBraceComments;
+    explicit SIntType(parse::LocationRange locationRange,
+                      ConsecutiveComments beforeSIntComments,
+                      ConsecutiveComments beforeLBraceComments,
+                      Expression *bitCount,
+                      ConsecutiveComments beforeRBraceComments) noexcept
+        : IntegerType(locationRange, true),
+          beforeSIntComments(beforeSIntComments),
+          beforeLBraceComments(beforeLBraceComments),
+          bitCount(bitCount),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
+
+template <bool Signed, std::size_t BitCount>
+class GenericBuiltInIntegerType : public IntegerType
+{
+public:
+    static constexpr bool isSigned = Signed;
+    static constexpr std::size_t bitCount = BitCount;
+    ConsecutiveComments beforeNameComments;
+    explicit GenericBuiltInIntegerType(parse::LocationRange locationRange,
+                                       ConsecutiveComments beforeNameComments) noexcept
+        : IntegerType(locationRange, isSigned),
+          beforeNameComments(beforeNameComments)
+    {
+    }
+};
+
+template <bool Signed, std::size_t BitCount>
+constexpr bool GenericBuiltInIntegerType<Signed, BitCount>::isSigned;
+
+template <bool Signed, std::size_t BitCount>
+constexpr std::size_t GenericBuiltInIntegerType<Signed, BitCount>::bitCount;
+
+class U8Type final : public GenericBuiltInIntegerType<false, 8>
+{
+public:
+    explicit U8Type(parse::LocationRange locationRange,
+                    ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class U16Type final : public GenericBuiltInIntegerType<false, 16>
+{
+public:
+    explicit U16Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class U32Type final : public GenericBuiltInIntegerType<false, 32>
+{
+public:
+    explicit U32Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class U64Type final : public GenericBuiltInIntegerType<false, 64>
+{
+public:
+    explicit U64Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class S8Type final : public GenericBuiltInIntegerType<true, 8>
+{
+public:
+    explicit S8Type(parse::LocationRange locationRange,
+                    ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class S16Type final : public GenericBuiltInIntegerType<true, 16>
+{
+public:
+    explicit S16Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class S32Type final : public GenericBuiltInIntegerType<true, 32>
+{
+public:
+    explicit S32Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class S64Type final : public GenericBuiltInIntegerType<true, 64>
+{
+public:
+    explicit S64Type(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
+
+class BitType final : public GenericBuiltInIntegerType<false, 1>
+{
+public:
+    explicit BitType(parse::LocationRange locationRange,
+                     ConsecutiveComments beforeNameComments) noexcept
+        : GenericBuiltInIntegerType(locationRange, beforeNameComments)
+    {
+    }
+};
 }

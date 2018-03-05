@@ -19,6 +19,37 @@
 
 #pragma once
 
+#include "type.h"
+#include "comment.h"
+#include "expression.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class MemoryType final : public Type
+{
+public:
+    ConsecutiveComments beforeMemoryComments;
+    ConsecutiveComments beforeLBracketComments;
+    Expression *size;
+    ConsecutiveComments beforeRBracketComments;
+    ConsecutiveComments beforeColonComments;
+    Type *elementType;
+    explicit MemoryType(parse::LocationRange locationRange,
+                        ConsecutiveComments beforeMemoryComments,
+                        ConsecutiveComments beforeLBracketComments,
+                        Expression *size,
+                        ConsecutiveComments beforeRBracketComments,
+                        ConsecutiveComments beforeColonComments,
+                        Type *elementType) noexcept
+        : Type(locationRange),
+          beforeMemoryComments(beforeMemoryComments),
+          beforeLBracketComments(beforeLBracketComments),
+          size(size),
+          beforeRBracketComments(beforeRBracketComments),
+          beforeColonComments(beforeColonComments),
+          elementType(elementType)
+    {
+    }
+};
 }

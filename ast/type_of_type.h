@@ -19,6 +19,31 @@
 
 #pragma once
 
+#include "type.h"
+#include "comment.h"
+#include "expression.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class TypeOfType final : public Type
+{
+public:
+    ConsecutiveComments beforeTypeOfComments;
+    ConsecutiveComments beforeLParenComments;
+    Expression *expression;
+    ConsecutiveComments beforeRParenComments;
+    explicit TypeOfType(parse::LocationRange locationRange,
+                        ConsecutiveComments beforeTypeOfComments,
+                        ConsecutiveComments beforeLParenComments,
+                        Expression *expression,
+                        ConsecutiveComments beforeRParenComments) noexcept
+        : Type(locationRange),
+          beforeTypeOfComments(beforeTypeOfComments),
+          beforeLParenComments(beforeLParenComments),
+          expression(expression),
+          beforeRParenComments(beforeRParenComments)
+    {
+    }
+};
 }

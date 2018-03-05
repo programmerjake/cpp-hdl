@@ -140,8 +140,6 @@ Type : ScopedId
      | "s32"
      | "s64"
      | "bit"
-     | "s1"
-     | "u1"
-     | "memory" Expression "of" Type
+     | "memory" "[" Expression "]" ":" Type
      | "{" (Type ",")* (Type ","?)? "}"
-     | "function" "(" ((ID ":")? Type ("," (ID ":")? Type)*)? ")" (":" Type)? "{" Statement* "}";
+     | "function" "(" ((ID ":")? Type ("," (ID ":")? Type)*)? ")" (":" Type)?;
