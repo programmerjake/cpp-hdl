@@ -19,6 +19,13 @@
 
 #pragma once
 
+#include "node.h"
+
 namespace ast
 {
+class TemplateArguments final : public Node
+{
+public:
+#error finish
+};
 }

@@ -34,9 +34,9 @@ class RegStatementNameAndInitializer final : public Node, public Symbol
 {
 public:
     ConsecutiveComments beforeNameComments;
-    RegStatementPart *parentPart;
     ConsecutiveComments beforeEqualComments;
     Expression *initializer;
+    RegStatementPart *parentPart;
     explicit RegStatementNameAndInitializer(parse::LocationRange locationRange,
                                             ConsecutiveComments beforeNameComments,
                                             parse::LocationRange nameLocationRange,

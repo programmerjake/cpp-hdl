@@ -19,6 +19,101 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class UnaryExpression : public Expression
+{
+public:
+    ConsecutiveComments beforeOperatorComments;
+    Expression *argument;
+    explicit UnaryExpression(parse::LocationRange locationRange,
+                             ConsecutiveComments beforeOperatorComments,
+                             Expression *argument) noexcept
+        : Expression(locationRange),
+          beforeOperatorComments(beforeOperatorComments),
+          argument(argument)
+    {
+    }
+};
+
+class LogicalNotExpression final : public UnaryExpression
+{
+public:
+    explicit LogicalNotExpression(parse::LocationRange locationRange,
+                                  ConsecutiveComments beforeOperatorComments,
+                                  Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class BitwiseNotExpression final : public UnaryExpression
+{
+public:
+    explicit BitwiseNotExpression(parse::LocationRange locationRange,
+                                  ConsecutiveComments beforeOperatorComments,
+                                  Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class UnaryPlusExpression final : public UnaryExpression
+{
+public:
+    explicit UnaryPlusExpression(parse::LocationRange locationRange,
+                                 ConsecutiveComments beforeOperatorComments,
+                                 Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class UnaryMinusExpression final : public UnaryExpression
+{
+public:
+    explicit UnaryMinusExpression(parse::LocationRange locationRange,
+                                  ConsecutiveComments beforeOperatorComments,
+                                  Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class AndReduceExpression final : public UnaryExpression
+{
+public:
+    explicit AndReduceExpression(parse::LocationRange locationRange,
+                                 ConsecutiveComments beforeOperatorComments,
+                                 Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class OrReduceExpression final : public UnaryExpression
+{
+public:
+    explicit OrReduceExpression(parse::LocationRange locationRange,
+                                ConsecutiveComments beforeOperatorComments,
+                                Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
+
+class XorReduceExpression final : public UnaryExpression
+{
+public:
+    explicit XorReduceExpression(parse::LocationRange locationRange,
+                                 ConsecutiveComments beforeOperatorComments,
+                                 Expression *argument) noexcept
+        : UnaryExpression(locationRange, beforeOperatorComments, argument)
+    {
+    }
+};
 }

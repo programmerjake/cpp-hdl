@@ -115,6 +115,15 @@ enum class TokenType : std::uint_fast8_t
     ColonColon,
     DotDotDot,
     EqualRAngle,
+    LAngleLAngle,
+    RAngleRAngle,
+    LAngleEqual,
+    RAngleEqual,
+    EqualEqual,
+    EMarkEqual,
+    AmpAmp,
+    VBarVBar,
+    LAngleMinusRAngle,
 };
 
 struct Token final
@@ -283,6 +292,24 @@ struct Token final
             return "..."_sv;
         case Type::EqualRAngle:
             return "=>"_sv;
+        case Type::LAngleLAngle:
+            return "<<"_sv;
+        case Type::RAngleRAngle:
+            return ">>"_sv;
+        case Type::LAngleEqual:
+            return "<="_sv;
+        case Type::RAngleEqual:
+            return ">="_sv;
+        case Type::EqualEqual:
+            return "=="_sv;
+        case Type::EMarkEqual:
+            return "!="_sv;
+        case Type::AmpAmp:
+            return "&&"_sv;
+        case Type::VBarVBar:
+            return "||"_sv;
+        case Type::LAngleMinusRAngle:
+            return "<->"_sv;
         }
         return {};
     }

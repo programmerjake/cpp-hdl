@@ -318,6 +318,11 @@ struct Tokenizer::TokenParser
             return Token(TokenType::Tilde, LocationRange(startLocation, currentLocation));
         case '!':
             get();
+            if(peek() == '=')
+            {
+                get();
+                return Token(TokenType::EMarkEqual, LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::EMark, LocationRange(startLocation, currentLocation));
         case '%':
             get();
@@ -327,6 +332,11 @@ struct Tokenizer::TokenParser
             return Token(TokenType::Caret, LocationRange(startLocation, currentLocation));
         case '&':
             get();
+            if(peek() == '&')
+            {
+                get();
+                return Token(TokenType::AmpAmp, LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::Amp, LocationRange(startLocation, currentLocation));
         case '*':
             get();
@@ -341,12 +351,22 @@ struct Tokenizer::TokenParser
                 get();
                 return Token(TokenType::EqualRAngle, LocationRange(startLocation, currentLocation));
             }
+            if(peek() == '=')
+            {
+                get();
+                return Token(TokenType::EqualEqual, LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::Equal, LocationRange(startLocation, currentLocation));
         case '+':
             get();
             return Token(TokenType::Plus, LocationRange(startLocation, currentLocation));
         case '|':
             get();
+            if(peek() == '|')
+            {
+                get();
+                return Token(TokenType::VBarVBar, LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::VBar, LocationRange(startLocation, currentLocation));
         case '.':
             get();
@@ -365,9 +385,43 @@ struct Tokenizer::TokenParser
             return Token(TokenType::Dot, LocationRange(startLocation, currentLocation));
         case '<':
             get();
+            if(peek() == '=')
+            {
+                get();
+                return Token(TokenType::LAngleEqual, LocationRange(startLocation, currentLocation));
+            }
+            if(peek() == '<')
+            {
+                get();
+                return Token(TokenType::LAngleLAngle,
+                             LocationRange(startLocation, currentLocation));
+            }
+            if(peek() == '-')
+            {
+                auto afterLAngle = currentLocation;
+                get();
+                if(peek() == '>')
+                {
+                    get();
+                    return Token(TokenType::LAngleMinusRAngle,
+                                 LocationRange(startLocation, currentLocation));
+                }
+                currentLocation = afterLAngle;
+            }
             return Token(TokenType::LAngle, LocationRange(startLocation, currentLocation));
         case '>':
             get();
+            if(peek() == '=')
+            {
+                get();
+                return Token(TokenType::RAngleEqual, LocationRange(startLocation, currentLocation));
+            }
+            if(peek() == '>')
+            {
+                get();
+                return Token(TokenType::RAngleRAngle,
+                             LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::RAngle, LocationRange(startLocation, currentLocation));
         case '?':
             get();

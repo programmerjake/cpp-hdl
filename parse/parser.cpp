@@ -1018,6 +1018,15 @@ struct Parser
         case TokenType::QMark:
         case TokenType::DotDotDot:
         case TokenType::EqualRAngle:
+        case TokenType::LAngleLAngle:
+        case TokenType::RAngleRAngle:
+        case TokenType::LAngleEqual:
+        case TokenType::RAngleEqual:
+        case TokenType::EqualEqual:
+        case TokenType::EMarkEqual:
+        case TokenType::AmpAmp:
+        case TokenType::VBarVBar:
+        case TokenType::LAngleMinusRAngle:
             reportError(peek().token.locationRange, "expected: expression");
             return nullptr;
         }
@@ -1095,9 +1104,446 @@ struct Parser
         }
         return retval;
     }
+    ast::Expression *parseUnaryExpression()
+    {
+        switch(peek().token.type)
+        {
+        case TokenType::EMark:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::LogicalNotExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::Tilde:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::BitwiseNotExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::Plus:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::UnaryPlusExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::Minus:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::UnaryMinusExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::Amp:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::AndReduceExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::VBar:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::OrReduceExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        case TokenType::Caret:
+        {
+            auto operatorToken = get();
+            auto *argument = parseUnaryExpression();
+            return create<ast::XorReduceExpression>(
+                LocationRange(operatorToken.token.locationRange.begin(),
+                              argument->locationRange.end()),
+                operatorToken.comments,
+                argument);
+        }
+        default:
+            return parsePostfixExpression();
+        }
+    }
+    ast::Expression *parseMultiplicativeExpression()
+    {
+        ast::Expression *retval = parseUnaryExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::Star:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseUnaryExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval =
+                    create<ast::MulExpression>(locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::FSlash:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseUnaryExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval =
+                    create<ast::DivExpression>(locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::Percent:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseUnaryExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval =
+                    create<ast::RemExpression>(locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
+    ast::Expression *parseAdditiveExpression()
+    {
+        ast::Expression *retval = parseMultiplicativeExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::Plus:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseMultiplicativeExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval =
+                    create<ast::AddExpression>(locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::Minus:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseMultiplicativeExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval =
+                    create<ast::SubExpression>(locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
+    ast::Expression *parseShiftExpression()
+    {
+        ast::Expression *retval = parseAdditiveExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::LAngleLAngle:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseAdditiveExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::LeftShiftExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::RAngleRAngle:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseAdditiveExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::RightShiftExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
+    ast::Expression *parseRelationalExpression()
+    {
+        ast::Expression *retval = parseShiftExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::LAngle:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseShiftExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareLTExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::LAngleEqual:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseShiftExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareLEExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::RAngle:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseShiftExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareGTExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::RAngleEqual:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseShiftExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareGEExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
+    ast::Expression *parseEqualityExpression()
+    {
+        ast::Expression *retval = parseRelationalExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::EqualEqual:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseRelationalExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareEqExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::EMarkEqual:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseRelationalExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::CompareNEExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
+    ast::Expression *parseBitwiseAndExpression()
+    {
+        ast::Expression *retval = parseEqualityExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::Amp)
+            {
+                auto operatorToken = get();
+                auto *rhs = parseEqualityExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::BitwiseAndExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
+    }
+    ast::Expression *parseBitwiseXorExpression()
+    {
+        ast::Expression *retval = parseBitwiseAndExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::Caret)
+            {
+                auto operatorToken = get();
+                auto *rhs = parseBitwiseAndExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::BitwiseXorExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
+    }
+    ast::Expression *parseBitwiseOrExpression()
+    {
+        ast::Expression *retval = parseBitwiseXorExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::VBar)
+            {
+                auto operatorToken = get();
+                auto *rhs = parseBitwiseXorExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::BitwiseOrExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
+    }
+    ast::Expression *parseLogicalAndExpression()
+    {
+        ast::Expression *retval = parseBitwiseOrExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::AmpAmp)
+            {
+                auto operatorToken = get();
+                auto *rhs = parseBitwiseOrExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::LogicalAndExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
+    }
+    ast::Expression *parseLogicalOrExpression()
+    {
+        ast::Expression *retval = parseLogicalAndExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::VBarVBar)
+            {
+                auto operatorToken = get();
+                auto *rhs = parseLogicalAndExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::LogicalOrExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
+    }
+    ast::Expression *parseConditionalExpression()
+    {
+        ast::Expression *retval = parseLogicalOrExpression();
+        if(peek().token.type == TokenType::QMark)
+        {
+            auto qMarkToken = get();
+            auto *thenExpression = parseExpression();
+            auto colonToken = matchAndGet(TokenType::Colon);
+            auto *elseExpression = parseAssignmentExpression();
+            LocationRange locationRange(retval->locationRange.begin(),
+                                        elseExpression->locationRange.end());
+            return create<ast::ConditionalExpression>(locationRange,
+                                                      retval,
+                                                      qMarkToken.comments,
+                                                      thenExpression,
+                                                      colonToken.comments,
+                                                      elseExpression);
+        }
+        return retval;
+    }
+    ast::Expression *parseAssignmentExpression()
+    {
+        ast::Expression *retval = parseConditionalExpression();
+        while(true)
+        {
+            switch(peek().token.type)
+            {
+            case TokenType::Equal:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseConditionalExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::AssignmentExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            case TokenType::LAngleMinusRAngle:
+            {
+                auto operatorToken = get();
+                auto *rhs = parseConditionalExpression();
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            rhs->locationRange.end());
+                retval = create<ast::ConnectExpression>(
+                    locationRange, retval, operatorToken.comments, rhs);
+                continue;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        return retval;
+    }
     ast::Expression *parseExpression()
     {
-#error finish
+        return parseAssignmentExpression();
     }
     ast::ScopedId *parseScopedId()
     {

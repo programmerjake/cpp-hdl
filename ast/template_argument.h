@@ -53,7 +53,7 @@ class ValueTemplateArgument final : public TemplateArgument
 {
 public:
     Expression *value;
-    explicit TypeTemplateArgument(parse::LocationRange locationRange, Expression *value) noexcept
+    explicit ValueTemplateArgument(parse::LocationRange locationRange, Expression *value) noexcept
         : TemplateArgument(locationRange),
           value(value)
     {

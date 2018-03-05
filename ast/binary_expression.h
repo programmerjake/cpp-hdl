@@ -247,10 +247,10 @@ public:
     }
 };
 
-class ModExpression final : public BinaryExpression
+class RemExpression final : public BinaryExpression
 {
 public:
-    explicit ModExpression(parse::LocationRange locationRange,
+    explicit RemExpression(parse::LocationRange locationRange,
                            Expression *lhs,
                            ConsecutiveComments beforeOperatorComments,
                            Expression *rhs) noexcept
