@@ -21,4 +21,11 @@
 
 namespace ast
 {
+void FlipType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::FlipType";
+    state.setSimple(dumpNode, "beforeFlipComments", beforeFlipComments);
+    state.setPointer(dumpNode, "type", type);
+}
 }

@@ -21,4 +21,11 @@
 
 namespace ast
 {
+void ExpressionStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ExpressionStatement";
+    state.setPointer(dumpNode, "expression", expression);
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

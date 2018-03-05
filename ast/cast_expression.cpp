@@ -21,4 +21,16 @@
 
 namespace ast
 {
+void CastExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CastExpression";
+    state.setSimple(dumpNode, "beforeCastComments", beforeCastComments);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointer(dumpNode, "type", type);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "expression", expression);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

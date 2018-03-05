@@ -26,6 +26,7 @@
 #include "../util/string_pool.h"
 #include "type.h"
 #include "expression.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -57,6 +58,7 @@ public:
           statement(statement)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class ForTypeStatement final : public GenericForStatement
@@ -88,6 +90,7 @@ public:
           type(type)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class ForStatement final : public GenericForStatement
@@ -121,5 +124,6 @@ public:
                                                            secondExpression(secondExpression)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

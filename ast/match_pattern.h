@@ -24,6 +24,7 @@
 #include "comment.h"
 #include "../parse/token.h"
 #include "expression.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -33,6 +34,7 @@ public:
     explicit MatchPattern(parse::LocationRange locationRange) noexcept : Node(locationRange)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class NumberPatternMatchPattern final : public MatchPattern
@@ -48,6 +50,7 @@ public:
           pattern(std::move(pattern))
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class RangeMatchPattern final : public MatchPattern
@@ -66,5 +69,6 @@ public:
           secondExpression(secondExpression)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

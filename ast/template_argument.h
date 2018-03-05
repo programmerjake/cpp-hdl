@@ -24,6 +24,7 @@
 #include "comment.h"
 #include "type.h"
 #include "expression.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -33,6 +34,7 @@ public:
     explicit TemplateArgument(parse::LocationRange locationRange) noexcept : Node(locationRange)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class TypeTemplateArgument final : public TemplateArgument
@@ -47,6 +49,7 @@ public:
                                                          type(type)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class ValueTemplateArgument final : public TemplateArgument
@@ -58,5 +61,6 @@ public:
           value(value)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

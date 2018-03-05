@@ -23,6 +23,7 @@
 #include "comment.h"
 #include "../parse/source.h"
 #include <vector>
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -42,5 +43,6 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

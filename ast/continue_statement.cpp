@@ -21,4 +21,11 @@
 
 namespace ast
 {
+void ContinueStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ContinueStatement";
+    state.setSimple(dumpNode, "beforeContinueComments", beforeContinueComments);
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

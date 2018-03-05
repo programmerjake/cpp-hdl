@@ -964,7 +964,6 @@ struct Parser
         case TokenType::Enum:
         case TokenType::Flip:
         case TokenType::For:
-        case TokenType::From:
         case TokenType::Function:
         case TokenType::If:
         case TokenType::Implements:
@@ -1849,7 +1848,6 @@ struct Parser
         case TokenType::Enum:
         case TokenType::Fill:
         case TokenType::For:
-        case TokenType::From:
         case TokenType::If:
         case TokenType::Implements:
         case TokenType::Import:

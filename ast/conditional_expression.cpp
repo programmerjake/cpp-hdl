@@ -21,4 +21,14 @@
 
 namespace ast
 {
+void ConditionalExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ConditionalExpression";
+    state.setPointer(dumpNode, "condition", condition);
+    state.setSimple(dumpNode, "beforeQMarkComments", beforeQMarkComments);
+    state.setPointer(dumpNode, "trueValue", trueValue);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "falseValue", falseValue);
+}
 }

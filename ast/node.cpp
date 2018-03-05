@@ -17,16 +17,15 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "assignment_expression.h"
+#include "node.h"
+#include "../util/string_view.h"
 
 namespace ast
 {
-void AssignmentExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+void Node::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
-    Expression::dump(dumpNode, state);
-    dumpNode->nodeName = "ast::AssignmentExpression";
-    state.setPointer(dumpNode, "lhs", lhs);
-    state.setSimple(dumpNode, "beforeEqualComments", beforeEqualComments);
-    state.setPointer(dumpNode, "rhs", rhs);
+    using namespace util::string_view_literals;
+    dumpNode->nodeName = "ast::Node"_sv;
+    state.setSimple(dumpNode, "locationRange"_sv, locationRange);
 }
 }

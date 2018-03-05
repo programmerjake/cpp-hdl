@@ -18,7 +18,24 @@
  */
 
 #include "const_statement.h"
+#include <sstream>
 
 namespace ast
 {
+void ConstStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ConstStatement";
+    state.setSimple(dumpNode, "beforeConstComments", beforeConstComments);
+    state.setPointer(dumpNode, "firstPart", firstPart);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "part", part.part);
+    }
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

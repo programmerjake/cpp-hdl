@@ -22,6 +22,7 @@
 #include "../parse/source.h"
 #include <iterator>
 #include "../parse/token.h"
+#include <ostream>
 
 namespace ast
 {
@@ -127,6 +128,24 @@ struct ConsecutiveComments
     constexpr explicit ConsecutiveComments(parse::LocationRange locationRange) noexcept
         : locationRange(locationRange)
     {
+    }
+    friend std::ostream &operator<<(std::ostream &os, const ConsecutiveComments &value)
+    {
+        if(!value.locationRange)
+        {
+            os << "{<nullptr>}";
+            return os;
+        }
+        os << "{";
+        auto separator = "";
+        for(auto &token : value)
+        {
+            os << separator;
+            os << token.locationRange;
+            separator = ", ";
+        }
+        os << "}";
+        return os;
     }
 };
 }

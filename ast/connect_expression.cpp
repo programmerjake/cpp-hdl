@@ -21,4 +21,12 @@
 
 namespace ast
 {
+void ConnectExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ConnectExpression";
+    state.setPointer(dumpNode, "lhs", lhs);
+    state.setSimple(dumpNode, "beforeOperatorComments", beforeOperatorComments);
+    state.setPointer(dumpNode, "rhs", rhs);
+}
 }

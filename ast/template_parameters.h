@@ -24,6 +24,7 @@
 #include "template_parameter.h"
 #include <vector>
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -57,5 +58,6 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

@@ -23,10 +23,11 @@
 #include "comment.h"
 #include "type.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
-class CastExpression : public Expression
+class CastExpression final : public Expression
 {
 public:
     ConsecutiveComments beforeCastComments;
@@ -54,5 +55,6 @@ public:
           beforeRParenComments(beforeRParenComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

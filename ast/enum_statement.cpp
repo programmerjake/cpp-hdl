@@ -21,4 +21,10 @@
 
 namespace ast
 {
+void EnumStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::EnumStatement";
+    state.setPointer(dumpNode, "value", value);
+}
 }

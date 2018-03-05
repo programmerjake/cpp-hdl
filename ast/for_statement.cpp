@@ -21,4 +21,36 @@
 
 namespace ast
 {
+void GenericForStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::GenericForStatement";
+    state.setSimple(dumpNode, "beforeForComments", beforeForComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeInComments", beforeInComments);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+    state.setPointer(dumpNode, "statement", statement);
+}
+
+void ForTypeStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericForStatement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ForTypeStatement";
+    state.setSimple(dumpNode, "beforeTypeKeywordComments", beforeTypeKeywordComments);
+    state.setPointer(dumpNode, "type", type);
+}
+
+void ForStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericForStatement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ForStatement";
+    Expression *firstExpression;
+    ConsecutiveComments beforeToComments;
+    Expression *secondExpression;
+    state.setPointer(dumpNode, "firstExpression", firstExpression);
+    state.setSimple(dumpNode, "beforeToComments", beforeToComments);
+    state.setPointer(dumpNode, "secondExpression", secondExpression);
+}
 }

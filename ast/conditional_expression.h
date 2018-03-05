@@ -22,10 +22,11 @@
 #include "expression.h"
 #include "comment.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
-class ConditionalExpression : public Expression
+class ConditionalExpression final : public Expression
 {
 public:
     Expression *condition;
@@ -47,5 +48,6 @@ public:
           falseValue(falseValue)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

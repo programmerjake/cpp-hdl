@@ -27,6 +27,7 @@
 #include "../util/string_pool.h"
 #include "type.h"
 #include <vector>
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -52,6 +53,7 @@ public:
                                                     parentEnum(nullptr)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class Enum final : public Node, public Symbol
@@ -95,5 +97,6 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

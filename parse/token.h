@@ -50,7 +50,6 @@ enum class TokenType : std::uint_fast8_t
     Fill,
     Flip,
     For,
-    From,
     Function,
     If,
     Implements,
@@ -174,8 +173,6 @@ struct Token final
             return "flip"_sv;
         case Type::For:
             return "for"_sv;
-        case Type::From:
-            return "from"_sv;
         case Type::Function:
             return "function"_sv;
         case Type::If:

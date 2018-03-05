@@ -22,6 +22,7 @@
 #include "expression.h"
 #include "comment.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -38,6 +39,7 @@ public:
           argument(argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class LogicalNotExpression final : public UnaryExpression
@@ -49,6 +51,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class BitwiseNotExpression final : public UnaryExpression
@@ -60,6 +63,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class UnaryPlusExpression final : public UnaryExpression
@@ -71,6 +75,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class UnaryMinusExpression final : public UnaryExpression
@@ -82,6 +87,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class AndReduceExpression final : public UnaryExpression
@@ -93,6 +99,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class OrReduceExpression final : public UnaryExpression
@@ -104,6 +111,7 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class XorReduceExpression final : public UnaryExpression
@@ -115,5 +123,6 @@ public:
         : UnaryExpression(locationRange, beforeOperatorComments, argument)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

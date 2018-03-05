@@ -64,6 +64,7 @@ set(SOURCES
     memory_type.cpp
     module.cpp
     module_statement.cpp
+    node.cpp
     number_expression.cpp
     paren_expression.cpp
     pop_count_expression.cpp
@@ -93,4 +94,3 @@ set(SOURCES
 foreach(i ${SOURCES})
     target_sources(ast INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${i}")
 endforeach(i)
-

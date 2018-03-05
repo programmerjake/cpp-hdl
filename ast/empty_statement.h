@@ -22,6 +22,7 @@
 #include "statement.h"
 #include "comment.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -35,5 +36,6 @@ public:
           beforeSemicolonComments(beforeSemicolonComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

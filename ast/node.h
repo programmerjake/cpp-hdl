@@ -20,6 +20,7 @@
 #pragma once
 
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -31,5 +32,11 @@ public:
     {
     }
     virtual ~Node() = default;
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const = 0;
 };
+
+void utilDumpFunction(const Node *sourceNode, util::DumpTree *dumpNode, util::DumpState &state)
+{
+    sourceNode->dump(dumpNode, state);
+}
 }

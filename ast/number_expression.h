@@ -23,6 +23,7 @@
 #include "comment.h"
 #include "../math/bit_vector.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -39,5 +40,6 @@ public:
           value(std::move(value))
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

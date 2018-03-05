@@ -21,4 +21,15 @@
 
 namespace ast
 {
+void FillExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::FillExpression";
+    state.setSimple(dumpNode, "beforeFillComments", beforeFillComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "countExpression", countExpression);
+    state.setSimple(dumpNode, "beforeCommaComments", beforeCommaComments);
+    state.setPointer(dumpNode, "valueExpression", valueExpression);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

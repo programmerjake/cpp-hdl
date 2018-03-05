@@ -22,6 +22,7 @@
 #include "statement.h"
 #include "function.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -34,5 +35,6 @@ public:
           value(value)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

@@ -21,4 +21,11 @@
 
 namespace ast
 {
+void BreakStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BreakStatement";
+    state.setSimple(dumpNode, "beforeBreakComments", beforeBreakComments);
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

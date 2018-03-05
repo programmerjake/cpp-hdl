@@ -25,6 +25,7 @@
 #include <vector>
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -47,5 +48,6 @@ public:
           hasDotDotDot(hasDotDotDot)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 }

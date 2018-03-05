@@ -21,6 +21,7 @@
 
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -39,5 +40,6 @@ public:
           containingSymbolTable()
     {
     }
+    void dump(util::DumpTree *dumpNode, util::DumpState &state) const;
 };
 }

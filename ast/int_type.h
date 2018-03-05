@@ -23,6 +23,7 @@
 #include "../parse/source.h"
 #include "comment.h"
 #include "expression.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -35,6 +36,7 @@ public:
           isSigned(isSigned)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class UIntType final : public IntegerType
@@ -56,6 +58,7 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class SIntType final : public IntegerType
@@ -77,6 +80,7 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 template <bool Signed, std::size_t BitCount>
@@ -92,6 +96,7 @@ public:
           beforeNameComments(beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 template <bool Signed, std::size_t BitCount>
@@ -108,6 +113,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class U16Type final : public GenericBuiltInIntegerType<false, 16>
@@ -118,6 +124,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class U32Type final : public GenericBuiltInIntegerType<false, 32>
@@ -128,6 +135,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class U64Type final : public GenericBuiltInIntegerType<false, 64>
@@ -138,6 +146,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class S8Type final : public GenericBuiltInIntegerType<true, 8>
@@ -148,6 +157,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class S16Type final : public GenericBuiltInIntegerType<true, 16>
@@ -158,6 +168,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class S32Type final : public GenericBuiltInIntegerType<true, 32>
@@ -168,6 +179,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class S64Type final : public GenericBuiltInIntegerType<true, 64>
@@ -178,6 +190,7 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class BitType final : public GenericBuiltInIntegerType<false, 1>
@@ -188,5 +201,6 @@ public:
         : GenericBuiltInIntegerType(locationRange, beforeNameComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

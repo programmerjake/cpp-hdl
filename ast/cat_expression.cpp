@@ -18,7 +18,25 @@
  */
 
 #include "cat_expression.h"
+#include <sstream>
 
 namespace ast
 {
+void CatExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CatExpression";
+    state.setSimple(dumpNode, "beforeCatComments", beforeCatComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "firstExpression", firstExpression);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "expression", part.expression);
+    }
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

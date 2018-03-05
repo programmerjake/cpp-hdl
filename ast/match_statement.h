@@ -24,6 +24,7 @@
 #include "expression.h"
 #include <vector>
 #include "match_statement_part.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -55,5 +56,6 @@ public:
           beforeRBraceComments(beforeRBraceComments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

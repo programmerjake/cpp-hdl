@@ -21,4 +21,13 @@
 
 namespace ast
 {
+void ConstStatementPart::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ConstStatementPart";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeEqualComments", beforeEqualComments);
+    state.setPointer(dumpNode, "value", value);
+}
 }

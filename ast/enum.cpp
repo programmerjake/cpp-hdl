@@ -18,7 +18,39 @@
  */
 
 #include "enum.h"
+#include <sstream>
 
 namespace ast
 {
+void EnumPart::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::EnumPart";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeEqualComments", beforeEqualComments);
+    state.setPointer(dumpNode, "value", value);
+    state.setPointer(dumpNode, "parentEnum", parentEnum);
+}
+
+void Enum::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::Enum";
+    state.setSimple(dumpNode, "beforeEnumComments", beforeEnumComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "underlyingType", underlyingType);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "enumPart", part.enumPart);
+    }
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

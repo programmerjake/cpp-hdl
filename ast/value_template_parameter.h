@@ -24,6 +24,7 @@
 #include "type.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -50,5 +51,6 @@ public:
           valueType(valueType)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

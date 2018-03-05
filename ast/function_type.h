@@ -24,6 +24,7 @@
 #include "../util/string_pool.h"
 #include "comment.h"
 #include <vector>
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -90,5 +91,6 @@ public:
           returnType(returnType)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

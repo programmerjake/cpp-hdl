@@ -21,4 +21,120 @@
 
 namespace ast
 {
+void BinaryExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BinaryExpression";
+    state.setPointer(dumpNode, "lhs", lhs);
+    state.setSimple(dumpNode, "beforeOperatorComments", beforeOperatorComments);
+    state.setPointer(dumpNode, "rhs", rhs);
+}
+
+void LogicalAndExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::LogicalAndExpression";
+}
+
+void LogicalOrExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::LogicalOrExpression";
+}
+
+void BitwiseAndExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BitwiseAndExpression";
+}
+
+void BitwiseOrExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BitwiseOrExpression";
+}
+
+void BitwiseXorExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BitwiseXorExpression";
+}
+
+void LeftShiftExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::LeftShiftExpression";
+}
+
+void RightShiftExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::RightShiftExpression";
+}
+
+void CompareEqExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareEqExpression";
+}
+
+void CompareNEExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareNEExpression";
+}
+
+void CompareLEExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareLEExpression";
+}
+
+void CompareGEExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareGEExpression";
+}
+
+void CompareLTExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareLTExpression";
+}
+
+void CompareGTExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::CompareGTExpression";
+}
+
+void AddExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::AddExpression";
+}
+
+void SubExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::SubExpression";
+}
+
+void MulExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MulExpression";
+}
+
+void DivExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::DivExpression";
+}
+
+void RemExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    BinaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::RemExpression";
+}
 }

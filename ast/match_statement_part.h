@@ -25,6 +25,7 @@
 #include <vector>
 #include "statement.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -57,5 +58,6 @@ public:
           statement(statement)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

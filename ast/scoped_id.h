@@ -24,10 +24,11 @@
 #include "../parse/source.h"
 #include "../util/string_pool.h"
 #include "template_arguments.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
-class ScopedId : public Node
+class ScopedId final : public Node
 {
 public:
     ScopedId *parentScope;
@@ -55,5 +56,6 @@ public:
           templateArguments(templateArguments)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

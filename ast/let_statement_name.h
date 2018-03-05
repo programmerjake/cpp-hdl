@@ -22,6 +22,7 @@
 #include "node.h"
 #include "symbol.h"
 #include "comment.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -43,5 +44,6 @@ public:
           parentPart(parentPart)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

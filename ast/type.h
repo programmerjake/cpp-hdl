@@ -21,6 +21,7 @@
 
 #include "node.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -30,5 +31,6 @@ public:
     explicit Type(parse::LocationRange locationRange) noexcept : Node(locationRange)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 }

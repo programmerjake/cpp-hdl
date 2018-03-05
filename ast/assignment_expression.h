@@ -22,10 +22,11 @@
 #include "expression.h"
 #include "comment.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
-class AssignmentExpression : public Expression
+class AssignmentExpression final : public Expression
 {
 public:
     Expression *lhs;
@@ -41,5 +42,6 @@ public:
           rhs(rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

@@ -22,6 +22,7 @@
 #include "expression.h"
 #include "comment.h"
 #include "../parse/source.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -41,6 +42,7 @@ public:
           rhs(rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
 class LogicalAndExpression final : public BinaryExpression
@@ -53,6 +55,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class LogicalOrExpression final : public BinaryExpression
@@ -65,6 +68,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class BitwiseAndExpression final : public BinaryExpression
@@ -77,6 +81,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class BitwiseOrExpression final : public BinaryExpression
@@ -89,6 +94,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class BitwiseXorExpression final : public BinaryExpression
@@ -101,6 +107,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class LeftShiftExpression final : public BinaryExpression
@@ -113,6 +120,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class RightShiftExpression final : public BinaryExpression
@@ -125,6 +133,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareEqExpression final : public BinaryExpression
@@ -137,6 +146,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareNEExpression final : public BinaryExpression
@@ -149,6 +159,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareLEExpression final : public BinaryExpression
@@ -161,6 +172,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareGEExpression final : public BinaryExpression
@@ -173,6 +185,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareLTExpression final : public BinaryExpression
@@ -185,6 +198,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class CompareGTExpression final : public BinaryExpression
@@ -197,6 +211,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class AddExpression final : public BinaryExpression
@@ -209,6 +224,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class SubExpression final : public BinaryExpression
@@ -221,6 +237,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class MulExpression final : public BinaryExpression
@@ -233,6 +250,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class DivExpression final : public BinaryExpression
@@ -245,6 +263,7 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
 class RemExpression final : public BinaryExpression
@@ -257,5 +276,6 @@ public:
         : BinaryExpression(locationRange, lhs, beforeOperatorComments, rhs)
     {
     }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 }

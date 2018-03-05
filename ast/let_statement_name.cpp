@@ -21,4 +21,5 @@
 
 namespace ast
 {
+#error finish dump functions
 }

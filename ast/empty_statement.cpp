@@ -21,4 +21,10 @@
 
 namespace ast
 {
+void EmptyStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::EmptyStatement";
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

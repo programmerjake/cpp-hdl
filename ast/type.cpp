@@ -21,4 +21,9 @@
 
 namespace ast
 {
+void Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::Type";
+}
 }
