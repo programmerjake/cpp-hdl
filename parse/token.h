@@ -114,6 +114,7 @@ enum class TokenType : std::uint_fast8_t
 
     ColonColon,
     DotDotDot,
+    EqualRAngle,
 };
 
 struct Token final
@@ -280,6 +281,8 @@ struct Token final
             return "::"_sv;
         case Type::DotDotDot:
             return "..."_sv;
+        case Type::EqualRAngle:
+            return "=>"_sv;
         }
         return {};
     }
@@ -331,6 +334,40 @@ struct Token final
     constexpr bool isComment() const noexcept
     {
         return isComment(type);
+    }
+    static constexpr bool isInteger(Type type) noexcept
+    {
+        switch(type)
+        {
+        case Type::UnprefixedDecimalLiteralInteger:
+        case Type::DecimalLiteralInteger:
+        case Type::HexadecimalLiteralInteger:
+        case Type::OctalLiteralInteger:
+        case Type::BinaryLiteralInteger:
+            return true;
+        default:
+            return false;
+        }
+    }
+    constexpr bool isInteger() const noexcept
+    {
+        return isInteger(type);
+    }
+    static constexpr bool isIntegerPattern(Type type) noexcept
+    {
+        switch(type)
+        {
+        case Type::HexadecimalLiteralIntegerPattern:
+        case Type::OctalLiteralIntegerPattern:
+        case Type::BinaryLiteralIntegerPattern:
+            return true;
+        default:
+            return false;
+        }
+    }
+    constexpr bool isIntegerPattern() const noexcept
+    {
+        return isIntegerPattern(type);
     }
 };
 }

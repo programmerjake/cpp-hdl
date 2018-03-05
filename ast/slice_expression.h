@@ -19,6 +19,36 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class SliceExpression final : public Expression
+{
+public:
+    Expression *slicedValue;
+    ConsecutiveComments beforeLBracketComments;
+    Expression *startIndex;
+    ConsecutiveComments beforeToComments;
+    Expression *endIndex;
+    ConsecutiveComments beforeRBracketComments;
+    explicit SliceExpression(parse::LocationRange locationRange,
+                             Expression *slicedValue,
+                             ConsecutiveComments beforeLBracketComments,
+                             Expression *startIndex,
+                             ConsecutiveComments beforeToComments,
+                             Expression *endIndex,
+                             ConsecutiveComments beforeRBracketComments) noexcept
+        : Expression(locationRange),
+          slicedValue(slicedValue),
+          beforeLBracketComments(beforeLBracketComments),
+          startIndex(startIndex),
+          beforeToComments(beforeToComments),
+          endIndex(endIndex),
+          beforeRBracketComments(beforeRBracketComments)
+    {
+    }
+};
 }

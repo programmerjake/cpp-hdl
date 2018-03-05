@@ -19,6 +19,27 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class ParenExpression final : public Expression
+{
+public:
+    ConsecutiveComments beforeLParenComments;
+    Expression *expression;
+    ConsecutiveComments beforeRParenComments;
+    explicit ParenExpression(parse::LocationRange locationRange,
+                             ConsecutiveComments beforeLParenComments,
+                             Expression *expression,
+                             ConsecutiveComments beforeRParenComments) noexcept
+        : Expression(locationRange),
+          beforeLParenComments(beforeLParenComments),
+          expression(expression),
+          beforeRParenComments(beforeRParenComments)
+    {
+    }
+};
 }

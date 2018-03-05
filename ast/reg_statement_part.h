@@ -21,7 +21,7 @@
 
 #include "node.h"
 #include "comment.h"
-#include "reg_statement_name.h"
+#include "reg_statement_name_and_initializer.h"
 #include <vector>
 #include "type.h"
 #include "../parse/source.h"
@@ -34,19 +34,20 @@ public:
     struct Part final
     {
         ConsecutiveComments beforeCommaComments;
-        RegStatementName *name;
-        constexpr Part(ConsecutiveComments beforeCommaComments, RegStatementName *name) noexcept
+        RegStatementNameAndInitializer *name;
+        constexpr Part(ConsecutiveComments beforeCommaComments,
+                       RegStatementNameAndInitializer *name) noexcept
             : beforeCommaComments(beforeCommaComments),
               name(name)
         {
         }
     };
-    RegStatementName *firstName;
+    RegStatementNameAndInitializer *firstName;
     std::vector<Part> parts;
     ConsecutiveComments beforeColonComments;
     Type *type;
     explicit RegStatementPart(parse::LocationRange locationRange,
-                              RegStatementName *firstName,
+                              RegStatementNameAndInitializer *firstName,
                               std::vector<Part> parts,
                               ConsecutiveComments beforeColonComments,
                               Type *type) noexcept : Node(locationRange),

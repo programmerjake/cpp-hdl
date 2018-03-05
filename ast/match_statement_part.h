@@ -22,6 +22,7 @@
 #include "node.h"
 #include "match_pattern.h"
 #include "comment.h"
+#include <vector>
 #include "statement.h"
 #include "../parse/source.h"
 
@@ -30,15 +31,28 @@ namespace ast
 class MatchStatementPart final : public Node
 {
 public:
-    MatchPattern *matchPattern;
+    struct Part final
+    {
+        ConsecutiveComments beforeCommaComments;
+        MatchPattern *matchPattern;
+        constexpr Part(ConsecutiveComments beforeCommaComments, MatchPattern *matchPattern) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              matchPattern(matchPattern)
+        {
+        }
+    };
+    MatchPattern *firstMatchPattern;
+    std::vector<Part> parts;
     ConsecutiveComments beforeEqualRAngleComments;
     Statement *statement;
     explicit MatchStatementPart(parse::LocationRange locationRange,
-                                MatchPattern *matchPattern,
+                                MatchPattern *firstMatchPattern,
+                                std::vector<Part> parts,
                                 ConsecutiveComments beforeEqualRAngleComments,
                                 Statement *statement) noexcept
         : Node(locationRange),
-          matchPattern(matchPattern),
+          firstMatchPattern(firstMatchPattern),
+          parts(std::move(parts)),
           beforeEqualRAngleComments(beforeEqualRAngleComments),
           statement(statement)
     {

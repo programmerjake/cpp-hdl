@@ -336,6 +336,11 @@ struct Tokenizer::TokenParser
             return Token(TokenType::Minus, LocationRange(startLocation, currentLocation));
         case '=':
             get();
+            if(peek() == '>')
+            {
+                get();
+                return Token(TokenType::EqualRAngle, LocationRange(startLocation, currentLocation));
+            }
             return Token(TokenType::Equal, LocationRange(startLocation, currentLocation));
         case '+':
             get();

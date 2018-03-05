@@ -60,6 +60,7 @@ set(SOURCES
     match_pattern.cpp
     match_statement.cpp
     match_statement_part.cpp
+    member_expression.cpp
     memory_type.cpp
     module.cpp
     module_statement.cpp
@@ -67,7 +68,7 @@ set(SOURCES
     paren_expression.cpp
     pop_count_expression.cpp
     reg_statement.cpp
-    reg_statement_name.cpp
+    reg_statement_name_and_initializer.cpp
     reg_statement_part.cpp
     return_statement.cpp
     scoped_id.cpp
@@ -76,6 +77,7 @@ set(SOURCES
     slice_expression.cpp
     statement.cpp
     symbol_table.cpp
+    template_argument.cpp
     template_arguments.cpp
     template_parameter.cpp
     template_parameters.cpp

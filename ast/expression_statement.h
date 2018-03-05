@@ -21,6 +21,7 @@
 
 #include "statement.h"
 #include "expression.h"
+#include "comment.h"
 #include "../parse/source.h"
 
 namespace ast
@@ -28,10 +29,14 @@ namespace ast
 class ExpressionStatement final : public Statement
 {
 public:
-    Expression *value;
-    explicit ExpressionStatement(parse::LocationRange locationRange, Expression *value) noexcept
+    Expression *expression;
+    ConsecutiveComments beforeSemicolonComments;
+    explicit ExpressionStatement(parse::LocationRange locationRange,
+                                 Expression *expression,
+                                 ConsecutiveComments beforeSemicolonComments) noexcept
         : Statement(locationRange),
-          value(value)
+          expression(expression),
+          beforeSemicolonComments(beforeSemicolonComments)
     {
     }
 };

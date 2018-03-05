@@ -19,6 +19,30 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class PopCountExpression : public Expression
+{
+public:
+    ConsecutiveComments beforePopCountComments;
+    ConsecutiveComments beforeLParenComments;
+    Expression *expression;
+    ConsecutiveComments beforeRParenComments;
+    explicit PopCountExpression(parse::LocationRange locationRange,
+                                ConsecutiveComments beforePopCountComments,
+                                ConsecutiveComments beforeLParenComments,
+                                Expression *expression,
+                                ConsecutiveComments beforeRParenComments) noexcept
+        : Expression(locationRange),
+          beforePopCountComments(beforePopCountComments),
+          beforeLParenComments(beforeLParenComments),
+          expression(expression),
+          beforeRParenComments(beforeRParenComments)
+    {
+    }
+};
 }

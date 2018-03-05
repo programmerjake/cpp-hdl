@@ -19,6 +19,44 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+#include <vector>
+
 namespace ast
 {
+class FunctionCallExpression final : public Expression
+{
+public:
+    struct Part
+    {
+        ConsecutiveComments beforeCommaComments;
+        Expression *expression;
+        constexpr Part(ConsecutiveComments beforeCommaComments, Expression *expression) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              expression(expression)
+        {
+        }
+    };
+    Expression *function;
+    ConsecutiveComments beforeLParenComments;
+    Expression *firstExpression;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeRParenComments;
+    explicit FunctionCallExpression(parse::LocationRange locationRange,
+                                    Expression *function,
+                                    ConsecutiveComments beforeLParenComments,
+                                    Expression *firstExpression,
+                                    std::vector<Part> parts,
+                                    ConsecutiveComments beforeRParenComments) noexcept
+        : Expression(locationRange),
+          function(function),
+          beforeLParenComments(beforeLParenComments),
+          firstExpression(firstExpression),
+          parts(std::move(parts)),
+          beforeRParenComments(beforeRParenComments)
+    {
+    }
+};
 }

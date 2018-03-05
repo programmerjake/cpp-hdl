@@ -17,27 +17,8 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "expression.h"
-#include "comment.h"
-#include "../math/bit_vector.h"
-#include "../parse/source.h"
+#include "template_argument.h"
 
 namespace ast
 {
-class NumberExpression final : public Expression
-{
-public:
-    ConsecutiveComments beforeNumberComments;
-    math::GMPInteger value;
-    explicit NumberExpression(parse::LocationRange locationRange,
-                              ConsecutiveComments beforeNumberComments,
-                              math::GMPInteger value) noexcept
-        : Expression(locationRange),
-          beforeNumberComments(beforeNumberComments),
-          value(std::move(value))
-    {
-    }
-};
 }

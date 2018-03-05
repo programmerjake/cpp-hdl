@@ -60,7 +60,7 @@ Statement : Module
 
 ConstStatementPart : ID "=" Expression;
 
-MatchStatementPart : MatchPattern "=>" Statement;
+MatchStatementPart : MatchPattern ("," MatchPattern)* "=>" Statement;
 
 MatchPattern : Expression ("to" Expression)?
              | NUMBER_PATTERN;
@@ -73,17 +73,22 @@ InputOutputStatementPart : InputOutputStatementName ("," InputOutputStatementNam
 
 InputOutputStatementName : ID;
 
-RegStatementPart : RegStatementName ("," RegStatementName)* ":" Type
-                 | RegStatementName "=" Expression;
+RegStatementPart : RegStatementNameAndInitializer ("," RegStatementNameAndInitializer)* ":" Type;
 
-RegStatementName : ID;
+RegStatementNameAndInitializer : ID ("=" Expression)?;
 
 Expression : ScopedId
            | NUMBER
            | "(" Expression ")"
            | "{" (Expression ",")* (Expression ","?)? "}"
-           | Expression "(" (Expression ("," Expression)*)? ")"
            | "cast" "{" Type "}" "(" Expression ")"
+           | "fill" "(" Expression "," Expression ")"
+           | "cat" "(" Expression ("," Expression)* ")"
+           | "popCount" "(" Expression ")"
+           | Expression "(" (Expression ("," Expression)*)? ")"
+           | Expression "[" Expression "]"
+           | Expression "[" Expression "to" Expression "]"
+           | Expression "." ID
            | "!" Expression
            | "~" Expression
            | "+" Expression
@@ -91,33 +96,30 @@ Expression : ScopedId
            | "&" Expression
            | "|" Expression
            | "^" Expression
-           | Expression "&&" Expression
-           | Expression "||" Expression
-           | Expression "&" Expression
-           | Expression "|" Expression
-           | Expression "^" Expression
+           | Expression "*" Expression
+           | Expression "/" Expression
+           | Expression "%" Expression
+           | Expression "+" Expression
+           | Expression "-" Expression
            | Expression "<<" Expression
            | Expression ">>" Expression
+           | Expression "&" Expression
+           | Expression "^" Expression
+           | Expression "|" Expression
            | Expression "==" Expression
            | Expression "!=" Expression
            | Expression "<=" Expression
            | Expression ">=" Expression
            | Expression "<" Expression
            | Expression ">" Expression
-           | Expression "+" Expression
-           | Expression "-" Expression
-           | Expression "*" Expression
-           | Expression "/" Expression
-           | Expression "%" Expression
+           | Expression "&&" Expression
+           | Expression "||" Expression
            | Expression "?" Expression ":" Expression
-           | "fill" "(" Expression "," Expression ")"
-           | "cat" "(" Expression ("," Expression)* ")"
-           | "popCount" "(" Expression ")"
-           | Expression "[" Expression ( "from" Expression )? "]"
            | Expression "=" Expression
            | Expression "<->" Expression;
 
-ScopedId : "::"? ID TemplateArguments? ("::" ID TemplateArguments?)*;
+ScopedId : "::"? ID TemplateArguments?
+         | ScopedId "::" ID TemplateArguments?;
 
 TemplateArguments : "{" (TemplateArgument ("," TemplateArgument)*)? "}";
 

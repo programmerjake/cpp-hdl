@@ -17,7 +17,7 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "reg_statement_name.h"
+#include "reg_statement_name_and_initializer.h"
 
 namespace ast
 {

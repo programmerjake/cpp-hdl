@@ -33,8 +33,7 @@ public:
     {
         ConsecutiveComments beforeCommaComments;
         Expression *expression;
-        explicit constexpr Part(ConsecutiveComments beforeCommaComments,
-                                Expression *expression) noexcept
+        constexpr Part(ConsecutiveComments beforeCommaComments, Expression *expression) noexcept
             : beforeCommaComments(beforeCommaComments),
               expression(expression)
         {

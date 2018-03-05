@@ -19,6 +19,20 @@
 
 #pragma once
 
+#include "expression.h"
+#include "scoped_id.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class ScopedIdExpression final : public Expression
+{
+public:
+    ScopedId *value;
+    explicit ScopedIdExpression(parse::LocationRange locationRange, ScopedId *value) noexcept
+        : Expression(locationRange),
+          value(value)
+    {
+    }
+};
 }

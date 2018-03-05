@@ -22,24 +22,33 @@
 #include "node.h"
 #include "symbol.h"
 #include "comment.h"
+#include "expression.h"
+#include "../parse/source.h"
+#include "../util/string_pool.h"
 
 namespace ast
 {
 class RegStatementPart;
 
-class RegStatementName final : public Node, public Symbol
+class RegStatementNameAndInitializer final : public Node, public Symbol
 {
 public:
     ConsecutiveComments beforeNameComments;
     RegStatementPart *parentPart;
-    explicit RegStatementName(parse::LocationRange locationRange,
-                              ConsecutiveComments beforeNameComments,
-                              parse::LocationRange nameLocationRange,
-                              util::StringPool::Entry name,
-                              RegStatementPart *parentPart = nullptr) noexcept
+    ConsecutiveComments beforeEqualComments;
+    Expression *initializer;
+    explicit RegStatementNameAndInitializer(parse::LocationRange locationRange,
+                                            ConsecutiveComments beforeNameComments,
+                                            parse::LocationRange nameLocationRange,
+                                            util::StringPool::Entry name,
+                                            ConsecutiveComments beforeEqualComments,
+                                            Expression *initializer,
+                                            RegStatementPart *parentPart = nullptr) noexcept
         : Node(locationRange),
           Symbol(nameLocationRange, name),
           beforeNameComments(beforeNameComments),
+          beforeEqualComments(beforeEqualComments),
+          initializer(initializer),
           parentPart(parentPart)
     {
     }

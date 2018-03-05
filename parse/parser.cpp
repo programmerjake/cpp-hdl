@@ -460,12 +460,12 @@ struct Parser
         {
             auto inputOutputToken = get();
             bool isInput = inputOutputToken.token.type == TokenType::Input;
-            auto *firstPart = parseInputOutputStatementPart();
+            auto *firstPart = parseInputOutputStatementPart(isInput);
             std::vector<ast::InputOutputStatement::Part> parts;
             while(peek().token.type == TokenType::Comma)
             {
                 auto commaToken = get();
-                parts.push_back({commaToken.comments, parseInputOutputStatementPart()});
+                parts.push_back({commaToken.comments, parseInputOutputStatementPart(isInput)});
             }
             auto finalSemicolon = matchAndGet(TokenType::Semicolon);
             auto *retval = create<ast::InputOutputStatement>(
@@ -658,45 +658,442 @@ struct Parser
         default:
         {
             auto *expression = parseExpression();
-            return create<ast::ExpressionStatement>(expression->locationRange, expression);
+            auto finalSemicolon = matchAndGet(TokenType::Semicolon);
+            LocationRange locationRange(expression->locationRange.begin(),
+                                        finalSemicolon.token.locationRange.end());
+            return create<ast::ExpressionStatement>(
+                expression->locationRange, expression, finalSemicolon.comments);
         }
         }
     }
     ast::ConstStatementPart *parseConstStatementPart()
     {
-#error finish
+        auto constName = matchAndGet(TokenType::Identifier, "expected: const name");
+        auto equalToken = matchAndGet(TokenType::Equal);
+        auto *expression = parseExpression();
+        LocationRange locationRange(constName.token.locationRange.begin(),
+                                    expression->locationRange.end());
+        return create<ast::ConstStatementPart>(locationRange,
+                                               constName.comments,
+                                               constName.token.locationRange,
+                                               context.stringPool.intern(constName.token.getText()),
+                                               equalToken.comments,
+                                               expression);
     }
     ast::MatchStatementPart *parseMatchStatementPart()
     {
-#error finish
+        auto *firstMatchPattern = parseMatchPattern();
+        std::vector<ast::MatchStatementPart::Part> parts;
+        while(peek().token.type == TokenType::Comma)
+        {
+            auto commaToken = get();
+            parts.push_back({commaToken.comments, parseMatchPattern()});
+        }
+        auto equalRAngleToken = matchAndGet(TokenType::EqualRAngle);
+        auto *statement = parseStatement();
+        LocationRange locationRange(firstMatchPattern->locationRange.begin(),
+                                    statement->locationRange.end());
+        return create<ast::MatchStatementPart>(locationRange,
+                                               firstMatchPattern,
+                                               std::move(parts),
+                                               equalRAngleToken.comments,
+                                               statement);
     }
     ast::MatchPattern *parseMatchPattern()
     {
-#error finish
+        if(peek().token.isIntegerPattern())
+        {
+            auto patternToken = get();
+            return create<ast::NumberPatternMatchPattern>(patternToken.token.locationRange,
+                                                          patternToken.comments,
+                                                          patternToken.token.getIntegerValue());
+        }
+        auto *firstExpression = parseExpression();
+        auto locationRange = firstExpression->locationRange;
+        CommentsAndToken toToken = {};
+        ast::Expression *secondExpression = nullptr;
+        if(peek().token.type == TokenType::To)
+        {
+            toToken = get();
+            secondExpression = parseExpression();
+            locationRange.setEnd(secondExpression->locationRange.end());
+        }
+        return create<ast::RangeMatchPattern>(
+            locationRange, firstExpression, toToken.comments, secondExpression);
     }
     ast::LetStatementPart *parseLetStatementPart()
     {
-#error finish
+        auto *firstName = parseLetStatementName();
+        std::vector<ast::LetStatementPart::Part> parts;
+        while(peek().token.type == TokenType::Comma)
+        {
+            auto commaToken = get();
+            parts.push_back({commaToken.comments, parseLetStatementName()});
+        }
+        auto colonToken = matchAndGet(TokenType::Colon);
+        auto *type = parseType();
+        LocationRange locationRange(firstName->locationRange.begin(), type->locationRange.end());
+        auto *retval = create<ast::LetStatementPart>(
+            locationRange, firstName, std::move(parts), colonToken.comments, type);
+        firstName->parentPart = retval;
+        for(auto &part : retval->parts)
+            part.name->parentPart = retval;
+        return retval;
     }
     ast::LetStatementName *parseLetStatementName()
     {
-#error finish
+        auto idToken = matchAndGet(TokenType::Identifier, "expected: name");
+        return create<ast::LetStatementName>(idToken.token.locationRange,
+                                             idToken.comments,
+                                             idToken.token.locationRange,
+                                             context.stringPool.intern(idToken.token.getText()));
     }
-    ast::InputOutputStatementPart *parseInputOutputStatementPart()
+    ast::InputOutputStatementPart *parseInputOutputStatementPart(bool isInput)
     {
-#error finish
+        auto *firstName = parseInputOutputStatementName(isInput);
+        std::vector<ast::InputOutputStatementPart::Part> parts;
+        while(peek().token.type == TokenType::Comma)
+        {
+            auto commaToken = get();
+            parts.push_back({commaToken.comments, parseInputOutputStatementName(isInput)});
+        }
+        auto colonToken = matchAndGet(TokenType::Colon);
+        auto *type = parseType();
+        LocationRange locationRange(firstName->locationRange.begin(), type->locationRange.end());
+        auto *retval = create<ast::InputOutputStatementPart>(
+            locationRange, firstName, std::move(parts), colonToken.comments, type);
+        firstName->parentPart = retval;
+        for(auto &part : retval->parts)
+            part.name->parentPart = retval;
+        return retval;
     }
-    ast::InputOutputStatementName *parseInputOutputStatementName()
+    ast::InputOutputStatementName *parseInputOutputStatementName(bool isInput)
     {
-#error finish
+        auto idToken = matchAndGet(TokenType::Identifier,
+                                   isInput ? "expected: input name" : "expected: output name");
+        return create<ast::InputOutputStatementName>(
+            idToken.token.locationRange,
+            idToken.comments,
+            idToken.token.locationRange,
+            context.stringPool.intern(idToken.token.getText()));
     }
     ast::RegStatementPart *parseRegStatementPart()
     {
-#error finish
+        auto *firstName = parseRegStatementNameAndInitializer();
+        std::vector<ast::RegStatementPart::Part> parts;
+        while(peek().token.type == TokenType::Comma)
+        {
+            auto commaToken = get();
+            parts.push_back({commaToken.comments, parseRegStatementNameAndInitializer()});
+        }
+        auto colonToken = matchAndGet(TokenType::Colon);
+        auto *type = parseType();
+        LocationRange locationRange(firstName->locationRange.begin(), type->locationRange.end());
+        auto *retval = create<ast::RegStatementPart>(
+            locationRange, firstName, std::move(parts), colonToken.comments, type);
+        firstName->parentPart = retval;
+        for(auto &part : retval->parts)
+            part.name->parentPart = retval;
+        return retval;
     }
-    ast::RegStatementName *parseRegStatementName()
+    ast::RegStatementNameAndInitializer *parseRegStatementNameAndInitializer()
     {
-#error finish
+        auto regName = matchAndGet(TokenType::Identifier, "expected: reg name");
+        CommentsAndToken equalToken = {};
+        ast::Expression *initializer = nullptr;
+        auto locationRange = regName.token.locationRange;
+        if(peek().token.type == TokenType::Equal)
+        {
+            equalToken = get();
+            initializer = parseExpression();
+            locationRange.setEnd(initializer->locationRange.end());
+        }
+        return create<ast::RegStatementNameAndInitializer>(
+            locationRange,
+            regName.comments,
+            regName.token.locationRange,
+            context.stringPool.intern(regName.token.getText()),
+            equalToken.comments,
+            initializer);
+    }
+    ast::Expression *parsePrimaryExpression()
+    {
+        switch(peek().token.type)
+        {
+        case TokenType::ColonColon:
+        case TokenType::Identifier:
+        {
+            auto *scopedId = parseScopedId();
+            return create<ast::ScopedIdExpression>(scopedId->locationRange, scopedId);
+        }
+        case TokenType::UnprefixedDecimalLiteralInteger:
+        case TokenType::DecimalLiteralInteger:
+        case TokenType::HexadecimalLiteralInteger:
+        case TokenType::OctalLiteralInteger:
+        case TokenType::BinaryLiteralInteger:
+        {
+            auto numberToken = get();
+            return create<ast::NumberExpression>(numberToken.token.locationRange,
+                                                 numberToken.comments,
+                                                 numberToken.token.getIntegerValue().value);
+        }
+        case TokenType::HexadecimalLiteralIntegerPattern:
+        case TokenType::OctalLiteralIntegerPattern:
+        case TokenType::BinaryLiteralIntegerPattern:
+            reportError(peek().token.locationRange, "number pattern not allowed here");
+            return nullptr;
+        case TokenType::LParen:
+        {
+            auto openingLParen = get();
+            auto *expression = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::ParenExpression>(
+                LocationRange(openingLParen.token.locationRange.begin(),
+                              closingRParen.token.locationRange.end()),
+                openingLParen.comments,
+                expression,
+                closingRParen.comments);
+        }
+        case TokenType::LBrace:
+        {
+            auto openingLBrace = get();
+            bool hasTrailingComma = false;
+            std::vector<ast::ListExpression::Part> parts;
+            while(peek().token.type != TokenType::RBrace
+                  || peek().token.type != TokenType::EndOfFile)
+            {
+                auto *expression = parseExpression();
+                if(peek().token.type == TokenType::Comma)
+                {
+                    hasTrailingComma = true;
+                    parts.push_back({expression, get().comments});
+                    continue;
+                }
+                hasTrailingComma = false;
+                parts.push_back({expression, {}});
+                break;
+            }
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            return create<ast::ListExpression>(
+                LocationRange(openingLBrace.token.locationRange.begin(),
+                              closingRBrace.token.locationRange.end()),
+                openingLBrace.comments,
+                std::move(parts),
+                hasTrailingComma,
+                closingRBrace.comments);
+        }
+        case TokenType::Cast:
+        {
+            auto castToken = get();
+            auto openingLBrace = matchAndGet(TokenType::LBrace);
+            auto *type = parseType();
+            auto closingRBrace = matchAndGet(TokenType::RBrace);
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *expression = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::CastExpression>(
+                LocationRange(castToken.token.locationRange.begin(),
+                              closingRParen.token.locationRange.end()),
+                castToken.comments,
+                openingLBrace.comments,
+                type,
+                closingRBrace.comments,
+                openingLParen.comments,
+                expression,
+                closingRParen.comments);
+        }
+        case TokenType::Fill:
+        {
+            auto fillToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *countExpression = parseExpression();
+            auto commaToken = matchAndGet(TokenType::Comma);
+            auto *valueExpression = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::FillExpression>(
+                LocationRange(fillToken.token.locationRange.begin(),
+                              closingRParen.token.locationRange.end()),
+                fillToken.comments,
+                openingLParen.comments,
+                countExpression,
+                commaToken.comments,
+                valueExpression,
+                closingRParen.comments);
+        }
+        case TokenType::Cat:
+        {
+            auto catToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *firstExpression = parseExpression();
+            std::vector<ast::CatExpression::Part> parts;
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseExpression()});
+            }
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::CatExpression>(
+                LocationRange(catToken.token.locationRange.begin(),
+                              closingRParen.token.locationRange.end()),
+                catToken.comments,
+                openingLParen.comments,
+                firstExpression,
+                std::move(parts),
+                closingRParen.comments);
+        }
+        case TokenType::PopCount:
+        {
+            auto popCountToken = get();
+            auto openingLParen = matchAndGet(TokenType::LParen);
+            auto *expression = parseExpression();
+            auto closingRParen = matchAndGet(TokenType::RParen);
+            return create<ast::PopCountExpression>(
+                LocationRange(popCountToken.token.locationRange.begin(),
+                              closingRParen.token.locationRange.end()),
+                popCountToken.comments,
+                openingLParen.comments,
+                expression,
+                closingRParen.comments);
+        }
+        case TokenType::EndOfFile:
+        case TokenType::Bit:
+        case TokenType::Break:
+        case TokenType::Const:
+        case TokenType::Continue:
+        case TokenType::Else:
+        case TokenType::Enum:
+        case TokenType::Flip:
+        case TokenType::For:
+        case TokenType::From:
+        case TokenType::Function:
+        case TokenType::If:
+        case TokenType::Implements:
+        case TokenType::Import:
+        case TokenType::In:
+        case TokenType::Input:
+        case TokenType::Interface:
+        case TokenType::Let:
+        case TokenType::Match:
+        case TokenType::Memory:
+        case TokenType::Module:
+        case TokenType::Output:
+        case TokenType::Reg:
+        case TokenType::Return:
+        case TokenType::S16:
+        case TokenType::S32:
+        case TokenType::S64:
+        case TokenType::S8:
+        case TokenType::SInt:
+        case TokenType::To:
+        case TokenType::Type:
+        case TokenType::TypeOf:
+        case TokenType::U16:
+        case TokenType::U32:
+        case TokenType::U64:
+        case TokenType::U8:
+        case TokenType::UInt:
+        case TokenType::BlockComment:
+        case TokenType::LineComment:
+        case TokenType::FSlash:
+        case TokenType::RBrace:
+        case TokenType::LBracket:
+        case TokenType::RBracket:
+        case TokenType::RParen:
+        case TokenType::Comma:
+        case TokenType::Colon:
+        case TokenType::Semicolon:
+        case TokenType::Tilde:
+        case TokenType::EMark:
+        case TokenType::Percent:
+        case TokenType::Caret:
+        case TokenType::Amp:
+        case TokenType::Star:
+        case TokenType::Minus:
+        case TokenType::Equal:
+        case TokenType::Plus:
+        case TokenType::VBar:
+        case TokenType::Dot:
+        case TokenType::LAngle:
+        case TokenType::RAngle:
+        case TokenType::QMark:
+        case TokenType::DotDotDot:
+        case TokenType::EqualRAngle:
+            reportError(peek().token.locationRange, "expected: expression");
+            return nullptr;
+        }
+    }
+    ast::Expression *parsePostfixExpression()
+    {
+        auto *retval = parseExpression();
+        while(true)
+        {
+            if(peek().token.type == TokenType::LParen)
+            {
+                auto openingLParen = get();
+                ast::Expression *firstExpression = nullptr;
+                std::vector<ast::FunctionCallExpression::Part> parts;
+                if(peek().token.type != TokenType::RParen
+                   && peek().token.type != TokenType::EndOfFile)
+                {
+                    firstExpression = parseExpression();
+                    while(peek().token.type == TokenType::Comma)
+                    {
+                        auto commaToken = get();
+                        parts.push_back({commaToken.comments, parseExpression()});
+                    }
+                }
+                auto closingRParen = matchAndGet(TokenType::RParen);
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            closingRParen.token.locationRange.end());
+                retval = create<ast::FunctionCallExpression>(locationRange,
+                                                             retval,
+                                                             openingLParen.comments,
+                                                             firstExpression,
+                                                             std::move(parts),
+                                                             closingRParen.comments);
+            }
+            else if(peek().token.type == TokenType::LBracket)
+            {
+                auto openingLBracket = get();
+                auto *startIndex = parseExpression();
+                CommentsAndToken toToken = {};
+                ast::Expression *endIndex = nullptr;
+                if(peek().token.type == TokenType::To)
+                {
+                    toToken = get();
+                    endIndex = parseExpression();
+                }
+                auto closingRBracket = matchAndGet(TokenType::RBracket);
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            closingRBracket.token.locationRange.end());
+                retval = create<ast::SliceExpression>(locationRange,
+                                                      retval,
+                                                      openingLBracket.comments,
+                                                      startIndex,
+                                                      toToken.comments,
+                                                      endIndex,
+                                                      closingRBracket.comments);
+            }
+            else if(peek().token.type == TokenType::Dot)
+            {
+                auto dotToken = get();
+                auto memberName = matchAndGet(TokenType::Identifier, "expected: member name");
+                LocationRange locationRange(retval->locationRange.begin(),
+                                            memberName.token.locationRange.end());
+                retval = create<ast::MemberExpression>(
+                    locationRange,
+                    retval,
+                    dotToken.comments,
+                    memberName.comments,
+                    memberName.token.locationRange,
+                    context.stringPool.intern(memberName.token.getText()));
+            }
+            else
+            {
+                break;
+            }
+        }
+        return retval;
     }
     ast::Expression *parseExpression()
     {

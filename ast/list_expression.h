@@ -19,6 +19,41 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include <vector>
+#include "../parse/source.h"
+
 namespace ast
 {
+class ListExpression final : public Expression
+{
+public:
+    struct Part final
+    {
+        Expression *part;
+        ConsecutiveComments beforeCommaComments;
+        constexpr Part(Expression *part, ConsecutiveComments beforeCommaComments) noexcept
+            : part(part),
+              beforeCommaComments(beforeCommaComments)
+        {
+        }
+    };
+    ConsecutiveComments beforeLBraceComments;
+    std::vector<Part> parts;
+    bool hasTrailingComma;
+    ConsecutiveComments beforeRBraceComments;
+    explicit ListExpression(parse::LocationRange locationRange,
+                            ConsecutiveComments beforeLBraceComments,
+                            std::vector<Part> parts,
+                            bool hasTrailingComma,
+                            ConsecutiveComments beforeRBraceComments) noexcept
+        : Expression(locationRange),
+          beforeLBraceComments(beforeLBraceComments),
+          parts(std::move(parts)),
+          hasTrailingComma(hasTrailingComma),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
+};
 }

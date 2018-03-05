@@ -19,6 +19,36 @@
 
 #pragma once
 
+#include "expression.h"
+#include "comment.h"
+#include "../parse/source.h"
+
 namespace ast
 {
+class FillExpression : public Expression
+{
+public:
+    ConsecutiveComments beforeFillComments;
+    ConsecutiveComments beforeLParenComments;
+    Expression *countExpression;
+    ConsecutiveComments beforeCommaComments;
+    Expression *valueExpression;
+    ConsecutiveComments beforeRParenComments;
+    explicit FillExpression(parse::LocationRange locationRange,
+                            ConsecutiveComments beforeFillComments,
+                            ConsecutiveComments beforeLParenComments,
+                            Expression *countExpression,
+                            ConsecutiveComments beforeCommaComments,
+                            Expression *valueExpression,
+                            ConsecutiveComments beforeRParenComments) noexcept
+        : Expression(locationRange),
+          beforeFillComments(beforeFillComments),
+          beforeLParenComments(beforeLParenComments),
+          countExpression(countExpression),
+          beforeCommaComments(beforeCommaComments),
+          valueExpression(valueExpression),
+          beforeRParenComments(beforeRParenComments)
+    {
+    }
+};
 }

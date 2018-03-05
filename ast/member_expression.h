@@ -19,40 +19,33 @@
 
 #pragma once
 
-#include "node.h"
+#include "expression.h"
 #include "comment.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
-#include "template_arguments.h"
 
 namespace ast
 {
-class ScopedId : public Node
+class MemberExpression final : public Expression
 {
 public:
-    ConsecutiveComments beforeColonColonComments;
-    bool hasColonColon;
-    ScopedId *parentScope;
+    Expression *compositeValue;
+    ConsecutiveComments beforeDotComments;
     ConsecutiveComments beforeNameComments;
     parse::LocationRange nameLocationRange;
     util::StringPool::Entry name;
-    TemplateArguments *templateArguments;
-    explicit ScopedId(parse::LocationRange locationRange,
-                      ConsecutiveComments beforeColonColonComments,
-                      bool hasColonColon,
-                      ScopedId *parentScope,
-                      ConsecutiveComments beforeNameComments,
-                      parse::LocationRange nameLocationRange,
-                      util::StringPool::Entry name,
-                      TemplateArguments *templateArguments) noexcept
-        : Node(locationRange),
-          beforeColonColonComments(beforeColonColonComments),
-          hasColonColon(hasColonColon),
-          parentScope(parentScope),
+    explicit MemberExpression(parse::LocationRange locationRange,
+                              Expression *compositeValue,
+                              ConsecutiveComments beforeDotComments,
+                              ConsecutiveComments beforeNameComments,
+                              parse::LocationRange nameLocationRange,
+                              util::StringPool::Entry name) noexcept
+        : Expression(locationRange),
+          compositeValue(compositeValue),
+          beforeDotComments(beforeDotComments),
           beforeNameComments(beforeNameComments),
           nameLocationRange(nameLocationRange),
-          name(name),
-          templateArguments(templateArguments)
+          name(name)
     {
     }
 };
