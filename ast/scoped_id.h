@@ -30,25 +30,25 @@ namespace ast
 class ScopedId : public Node
 {
 public:
+    ScopedId *parentScope;
     ConsecutiveComments beforeColonColonComments;
     bool hasColonColon;
-    ScopedId *parentScope;
     ConsecutiveComments beforeNameComments;
     parse::LocationRange nameLocationRange;
     util::StringPool::Entry name;
     TemplateArguments *templateArguments;
     explicit ScopedId(parse::LocationRange locationRange,
+                      ScopedId *parentScope,
                       ConsecutiveComments beforeColonColonComments,
                       bool hasColonColon,
-                      ScopedId *parentScope,
                       ConsecutiveComments beforeNameComments,
                       parse::LocationRange nameLocationRange,
                       util::StringPool::Entry name,
                       TemplateArguments *templateArguments) noexcept
         : Node(locationRange),
+          parentScope(parentScope),
           beforeColonColonComments(beforeColonColonComments),
           hasColonColon(hasColonColon),
-          parentScope(parentScope),
           beforeNameComments(beforeNameComments),
           nameLocationRange(nameLocationRange),
           name(name),

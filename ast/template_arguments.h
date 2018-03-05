@@ -20,12 +20,41 @@
 #pragma once
 
 #include "node.h"
+#include "comment.h"
+#include "template_argument.h"
+#include <vector>
+#include "../parse/source.h"
 
 namespace ast
 {
 class TemplateArguments final : public Node
 {
 public:
-#error finish
+    struct Part
+    {
+        ConsecutiveComments beforeCommaComments;
+        TemplateArgument *argument;
+        constexpr Part(ConsecutiveComments beforeCommaComments, TemplateArgument *argument) noexcept
+            : beforeCommaComments(beforeCommaComments),
+              argument(argument)
+        {
+        }
+    };
+    ConsecutiveComments beforeLBraceComments;
+    TemplateArgument *firstArgument;
+    std::vector<Part> parts;
+    ConsecutiveComments beforeRBraceComments;
+    explicit TemplateArguments(parse::LocationRange locationRange,
+                               ConsecutiveComments beforeLBraceComments,
+                               TemplateArgument *firstArgument,
+                               std::vector<Part> parts,
+                               ConsecutiveComments beforeRBraceComments) noexcept
+        : Node(locationRange),
+          beforeLBraceComments(beforeLBraceComments),
+          firstArgument(firstArgument),
+          parts(std::move(parts)),
+          beforeRBraceComments(beforeRBraceComments)
+    {
+    }
 };
 }

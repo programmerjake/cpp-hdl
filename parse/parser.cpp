@@ -1547,15 +1547,87 @@ struct Parser
     }
     ast::ScopedId *parseScopedId()
     {
-#error finish
+        LocationRange locationRange = peek().token.locationRange;
+        CommentsAndToken initialColonColon = {};
+        bool hasInitialColonColon = false;
+        if(peek().token.type == TokenType::ColonColon)
+        {
+            initialColonColon = get();
+            hasInitialColonColon = true;
+        }
+        auto initialName = matchAndGet(TokenType::Identifier, "expected: symbol name");
+        locationRange.setEnd(initialName.token.locationRange.end());
+        ast::TemplateArguments *initialTemplateArguments = nullptr;
+        if(peek().token.type == TokenType::LBrace)
+        {
+            initialTemplateArguments = parseTemplateArguments();
+            locationRange.setEnd(initialTemplateArguments->locationRange.end());
+        }
+        auto *retval = create<ast::ScopedId>(locationRange,
+                                             nullptr,
+                                             initialColonColon.comments,
+                                             hasInitialColonColon,
+                                             initialName.comments,
+                                             initialName.token.locationRange,
+                                             context.stringPool.intern(initialName.token.getText()),
+                                             initialTemplateArguments);
+        while(peek().token.type == TokenType::ColonColon)
+        {
+            auto colonColonToken = get();
+            auto name = matchAndGet(TokenType::Identifier, "expected: symbol name");
+            locationRange.setEnd(name.token.locationRange.end());
+            ast::TemplateArguments *templateArguments = nullptr;
+            if(peek().token.type == TokenType::LBrace)
+            {
+                templateArguments = parseTemplateArguments();
+                locationRange.setEnd(templateArguments->locationRange.end());
+            }
+            retval = create<ast::ScopedId>(locationRange,
+                                           retval,
+                                           colonColonToken.comments,
+                                           true,
+                                           name.comments,
+                                           name.token.locationRange,
+                                           context.stringPool.intern(name.token.getText()),
+                                           templateArguments);
+        }
+        return retval;
     }
     ast::TemplateArguments *parseTemplateArguments()
     {
-#error finish
+        auto openingLBrace = matchAndGet(TokenType::LBrace);
+        ast::TemplateArgument *firstArgument = nullptr;
+        std::vector<ast::TemplateArguments::Part> parts;
+        if(peek().token.type != TokenType::RBrace && peek().token.type != TokenType::EndOfFile)
+        {
+            firstArgument = parseTemplateArgument();
+            while(peek().token.type == TokenType::Comma)
+            {
+                auto commaToken = get();
+                parts.push_back({commaToken.comments, parseTemplateArgument()});
+            }
+        }
+        auto closingRBrace = matchAndGet(TokenType::RBrace);
+        LocationRange locationRange(openingLBrace.token.locationRange.begin(),
+                                    closingRBrace.token.locationRange.end());
+        return create<ast::TemplateArguments>(locationRange,
+                                              openingLBrace.comments,
+                                              firstArgument,
+                                              std::move(parts),
+                                              closingRBrace.comments);
     }
     ast::TemplateArgument *parseTemplateArgument()
     {
-#error finish
+        if(peek().token.type == TokenType::Type)
+        {
+            auto typeToken = get();
+            auto *type = parseType();
+            LocationRange locationRange(typeToken.token.locationRange.begin(),
+                                        type->locationRange.end());
+            return create<ast::TypeTemplateArgument>(locationRange, typeToken.comments, type);
+        }
+        auto *expression = parseExpression();
+        return create<ast::ValueTemplateArgument>(expression->locationRange, expression);
     }
     ast::Type *parseType()
     {
