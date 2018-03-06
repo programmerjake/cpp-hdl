@@ -21,5 +21,84 @@
 
 namespace ast
 {
-#error finish dump functions
+void IntegerType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::IntegerType";
+    state.setSimple(dumpNode, "isSigned", isSigned);
+}
+
+void UIntType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    IntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::UIntType";
+    state.setSimple(dumpNode, "beforeUIntComments", beforeUIntComments);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointer(dumpNode, "bitCount", bitCount);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+}
+
+void SIntType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    IntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::SIntType";
+    state.setSimple(dumpNode, "beforeSIntComments", beforeSIntComments);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointer(dumpNode, "bitCount", bitCount);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+}
+
+void U8Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::U8Type";
+}
+
+void U16Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::U16Type";
+}
+
+void U32Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::U32Type";
+}
+
+void U64Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::U64Type";
+}
+
+void S8Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::S8Type";
+}
+
+void S16Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::S16Type";
+}
+
+void S32Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::S32Type";
+}
+
+void S64Type::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::S64Type";
+}
+
+void BitType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    GenericBuiltInIntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BitType";
+}
 }

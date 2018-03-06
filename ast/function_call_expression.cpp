@@ -18,8 +18,26 @@
  */
 
 #include "function_call_expression.h"
+#include <sstream>
 
 namespace ast
 {
+void FunctionCallExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::FunctionCallExpression";
+    state.setPointer(dumpNode, "function", function);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "firstExpression", firstExpression);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "expression", part.expression);
+    }
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 #error finish dump functions
 }

@@ -21,5 +21,16 @@
 
 namespace ast
 {
-#error finish dump functions
+void IfStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::IfStatement";
+    state.setSimple(dumpNode, "beforeIfComments", beforeIfComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "condition", condition);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+    state.setPointer(dumpNode, "thenStatement", thenStatement);
+    state.setSimple(dumpNode, "beforeElseComments", beforeElseComments);
+    state.setPointer(dumpNode, "elseStatement", elseStatement);
+}
 }

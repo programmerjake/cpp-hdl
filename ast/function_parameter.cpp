@@ -18,8 +18,17 @@
  */
 
 #include "function_parameter.h"
+#include <sstream>
 
 namespace ast
 {
-#error finish dump functions
+void FunctionParameter::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::FunctionParameter";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "type", type);
+}
 }

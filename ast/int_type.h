@@ -105,6 +105,17 @@ constexpr bool GenericBuiltInIntegerType<Signed, BitCount>::isSigned;
 template <bool Signed, std::size_t BitCount>
 constexpr std::size_t GenericBuiltInIntegerType<Signed, BitCount>::bitCount;
 
+template <bool Signed, std::size_t BitCount>
+void GenericBuiltInIntegerType<Signed, BitCount>::dump(util::DumpTree *dumpNode,
+                                                       util::DumpState &state) const
+{
+    IntegerType::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::GenericBuiltInIntegerType";
+    // state.setSimple(dumpNode, "isSigned", isSigned); // aliases parent class
+    state.setSimple(dumpNode, "bitCount", bitCount);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+}
+
 class U8Type final : public GenericBuiltInIntegerType<false, 8>
 {
 public:

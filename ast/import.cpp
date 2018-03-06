@@ -21,5 +21,13 @@
 
 namespace ast
 {
-#error finish dump functions
+void Import::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::Import";
+    state.setSimple(dumpNode, "beforeImportComments", beforeImportComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

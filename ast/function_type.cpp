@@ -21,5 +21,33 @@
 
 namespace ast
 {
-#error finish dump functions
+void FunctionType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::FunctionType";
+    state.setSimple(dumpNode, "beforeFunctionComments", beforeFunctionComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setSimple(
+        dumpNode, "firstParameter.beforeNameComments", firstParameter.beforeNameComments);
+    state.setSimple(dumpNode, "firstParameter.nameLocationRange", firstParameter.nameLocationRange);
+    state.setSimple(dumpNode, "firstParameter.name", firstParameter.name);
+    state.setSimple(
+        dumpNode, "firstParameter.beforeColonComments", firstParameter.beforeColonComments);
+    state.setPointer(dumpNode, "firstParameter.type", firstParameter.type);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeNameComments", part.beforeNameComments);
+        state.setSimple(dumpNode, ss.str() + "nameLocationRange", part.nameLocationRange);
+        state.setSimple(dumpNode, ss.str() + "name", part.name);
+        state.setSimple(dumpNode, ss.str() + "beforeColonComments", part.beforeColonComments);
+        state.setPointer(dumpNode, ss.str() + "type", part.type);
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+    }
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "returnType", returnType);
+}
 }

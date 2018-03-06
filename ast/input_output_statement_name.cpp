@@ -21,5 +21,12 @@
 
 namespace ast
 {
-#error finish dump functions
+void InputOutputStatementName::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::InputOutputStatementName";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "parentPart", parentPart);
+}
 }

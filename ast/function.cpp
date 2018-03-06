@@ -18,8 +18,33 @@
  */
 
 #include "function.h"
+#include <sstream>
 
 namespace ast
 {
-#error finish dump functions
+void Function::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::Function";
+    state.setSimple(dumpNode, "beforeFunctionComments", beforeFunctionComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "templateParameters", templateParameters);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "firstFunctionParameter", firstFunctionParameter);
+    for(std::size_t i = 0; i < parameters.size(); i++)
+    {
+        auto &part = parameters[i];
+        std::ostringstream ss;
+        ss << "parameters[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "functionParameter", part.functionParameter);
+    }
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "returnType", returnType);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointerArray(dumpNode, "statements", statements);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

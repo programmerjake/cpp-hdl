@@ -126,19 +126,25 @@ private:
         dumpNode->pointerVariables[stringPool.intern(memberName)] = value;
     }
     template <typename T,
-              typename = std::enable_if_t<std::is_convertible<T &&, std::string>::value>>
+              typename = std::enable_if_t<std::is_convertible<T &&, std::string>::value && !std::is_pointer<std::remove_reference_t<T>>::value>>
     static std::string valueToString(T &&value)
     {
         return static_cast<std::string>(std::forward<T>(value));
     }
     template <typename T,
-              typename = std::enable_if_t<!std::is_convertible<T &&, std::string>::value>,
+              typename = std::enable_if_t<!std::is_convertible<T &&, std::string>::value && !std::is_pointer<std::remove_reference_t<T>>::value>,
               typename = void>
     static std::string valueToString(T &&value)
     {
         std::ostringstream ss;
         ss << std::forward<T>(value);
         return ss.str();
+    }
+    static std::string valueToString(const std::string *value)
+    {
+        if(!value)
+            return "<nullptr>";
+        return *value;
     }
     static std::string getNameWithIndex(string_view memberName, std::size_t index)
     {
