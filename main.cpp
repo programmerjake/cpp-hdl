@@ -3,6 +3,7 @@
 #include "parse/parser.h"
 #include "parse/source.h"
 #include "ast/context.h"
+#include "util/dump_tree.h"
 #include <string>
 
 void help(const char *arg0)
@@ -34,8 +35,12 @@ int main(int argc, char **argv)
         ast::Context context;
         try
         {
-            auto *ast = parse::parseTopLevelModule(context, source.get());
-            static_cast<void>(ast);
+            auto *tree = parse::parseTopLevelModule(context, source.get());
+            assert(tree);
+            util::Arena dumpArena;
+            util::DumpState dumpState(dumpArena, context.stringPool);
+            auto *dumpTree = dumpState.getDumpNode(tree);
+            static_cast<void>(dumpTree);
 #warning finish
         }
         catch(parse::ParseError &e)
