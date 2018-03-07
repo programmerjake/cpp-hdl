@@ -21,5 +21,53 @@
 
 namespace ast
 {
-#error finish dump functions
+void UnaryExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::UnaryExpression";
+    state.setSimple(dumpNode, "beforeOperatorComments", beforeOperatorComments);
+    state.setPointer(dumpNode, "argument", argument);
+}
+
+void LogicalNotExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::LogicalNotExpression";
+}
+
+void BitwiseNotExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::BitwiseNotExpression";
+}
+
+void UnaryPlusExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::UnaryPlusExpression";
+}
+
+void UnaryMinusExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::UnaryMinusExpression";
+}
+
+void AndReduceExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::AndReduceExpression";
+}
+
+void OrReduceExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::OrReduceExpression";
+}
+
+void XorReduceExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    UnaryExpression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::XorReduceExpression";
+}
 }

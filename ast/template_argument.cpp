@@ -21,5 +21,24 @@
 
 namespace ast
 {
-#error finish dump functions
+void TemplateArgument::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TemplateArgument";
+}
+
+void TypeTemplateArgument::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    TemplateArgument::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TypeTemplateArgument";
+    state.setSimple(dumpNode, "beforeTypeComments", beforeTypeComments);
+    state.setPointer(dumpNode, "type", type);
+}
+
+void ValueTemplateArgument::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    TemplateArgument::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ValueTemplateArgument";
+    state.setPointer(dumpNode, "value", value);
+}
 }

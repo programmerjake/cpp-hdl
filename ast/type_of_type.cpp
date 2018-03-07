@@ -21,5 +21,13 @@
 
 namespace ast
 {
-#error finish dump functions
+void TypeOfType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TypeOfType";
+    state.setSimple(dumpNode, "beforeTypeOfComments", beforeTypeOfComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "expression", expression);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

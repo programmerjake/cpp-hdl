@@ -23,6 +23,8 @@
 #include "../util/string_view.h"
 #include "source.h"
 #include "../math/bit_vector.h"
+#include <string>
+#include <ostream>
 
 namespace parse
 {
@@ -342,6 +344,13 @@ struct Token final
         IntegerValue(math::GMPInteger value) noexcept : value(std::move(value)), mask(-1L)
         {
         }
+        explicit operator std::string() const;
+        friend std::ostream &operator<<(std::ostream &os, const IntegerValue &v)
+        {
+            return os << static_cast<std::string>(v);
+        }
+        bool isHexadecimalMask() const;
+        bool isOctalMask() const;
     };
     IntegerValue getIntegerValue() const;
     static constexpr bool isComment(Type type) noexcept

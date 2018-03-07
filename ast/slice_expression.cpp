@@ -21,5 +21,15 @@
 
 namespace ast
 {
-#error finish dump functions
+void SliceExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::SliceExpression";
+    state.setPointer(dumpNode, "slicedValue", slicedValue);
+    state.setSimple(dumpNode, "beforeLBracketComments", beforeLBracketComments);
+    state.setPointer(dumpNode, "startIndex", startIndex);
+    state.setSimple(dumpNode, "beforeToComments", beforeToComments);
+    state.setPointer(dumpNode, "endIndex", endIndex);
+    state.setSimple(dumpNode, "beforeRBracketComments", beforeRBracketComments);
+}
 }

@@ -17,16 +17,14 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "return_statement.h"
+#include "symbol.h"
 
 namespace ast
 {
-void ReturnStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+void Symbol::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
-    Statement::dump(dumpNode, state);
-    dumpNode->nodeName = "ast::ReturnStatement";
-    state.setSimple(dumpNode, "beforeReturnComments", beforeReturnComments);
-    state.setPointer(dumpNode, "expression", expression);
-    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+    dumpNode->nodeName = "ast::Symbol";
+    state.setSimple(dumpNode, "symbolLocationRange", symbolLocationRange);
+    state.setSimple(dumpNode, "name", name);
 }
 }

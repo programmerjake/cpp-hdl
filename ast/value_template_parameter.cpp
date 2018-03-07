@@ -21,5 +21,11 @@
 
 namespace ast
 {
-#error finish dump functions
+void ValueTemplateParameter::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    TemplateParameter::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ValueTemplateParameter";
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "valueType", valueType);
+}
 }

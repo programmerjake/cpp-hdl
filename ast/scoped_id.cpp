@@ -21,5 +21,16 @@
 
 namespace ast
 {
-#error finish dump functions
+void ScopedId::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ScopedId";
+    state.setPointer(dumpNode, "parentScope", parentScope);
+    state.setSimple(dumpNode, "beforeColonColonComments", beforeColonColonComments);
+    state.setSimple(dumpNode, "hasColonColon", hasColonColon);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "nameLocationRange", nameLocationRange);
+    state.setSimple(dumpNode, "name", name);
+    state.setPointer(dumpNode, "templateArguments", templateArguments);
+}
 }

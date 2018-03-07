@@ -21,5 +21,12 @@
 
 namespace ast
 {
-#error finish dump functions
+void TypeTemplateParameter::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    TemplateParameter::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TypeTemplateParameter";
+    state.setSimple(dumpNode, "beforeTypeComments", beforeTypeComments);
+    state.setSimple(dumpNode, "beforeImplementsComments", beforeImplementsComments);
+    state.setPointer(dumpNode, "parentType", parentType);
+}
 }

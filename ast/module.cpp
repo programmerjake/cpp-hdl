@@ -21,5 +21,18 @@
 
 namespace ast
 {
-#error finish dump functions
+void Module::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::Module";
+    state.setSimple(dumpNode, "beforeModuleComments", beforeModuleComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "templateParameters", templateParameters);
+    state.setSimple(dumpNode, "beforeImplementsComments", beforeImplementsComments);
+    state.setPointer(dumpNode, "parentType", parentType);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointerArray(dumpNode, "statements", statements);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

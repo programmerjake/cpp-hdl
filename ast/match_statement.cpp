@@ -21,5 +21,16 @@
 
 namespace ast
 {
-#error finish dump functions
+void MatchStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MatchStatement";
+    state.setSimple(dumpNode, "beforeMatchComments", beforeMatchComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "matchee", matchee);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointerArray(dumpNode, "parts", parts);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

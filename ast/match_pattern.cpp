@@ -21,5 +21,26 @@
 
 namespace ast
 {
-#error finish dump functions
+void MatchPattern::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MatchPattern";
+}
+
+void NumberPatternMatchPattern::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    MatchPattern::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::NumberPatternMatchPattern";
+    state.setSimple(dumpNode, "beforeNumberComments", beforeNumberComments);
+    state.setSimple(dumpNode, "pattern", pattern);
+}
+
+void RangeMatchPattern::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    MatchPattern::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::RangeMatchPattern";
+    state.setPointer(dumpNode, "firstExpression", firstExpression);
+    state.setSimple(dumpNode, "beforeToComments", beforeToComments);
+    state.setPointer(dumpNode, "secondExpression", secondExpression);
+}
 }

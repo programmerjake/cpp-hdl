@@ -21,6 +21,9 @@
 #include <type_traits>
 #include "parse_error.h"
 #include "character_properties.h"
+#include "../util/dump_tree.h"
+#include <sstream>
+#include <algorithm>
 
 namespace parse
 {
@@ -86,5 +89,86 @@ Token::IntegerValue Token::getIntegerValue() const
         }
     }
     return {std::move(value), std::move(mask)};
+}
+
+Token::IntegerValue::operator std::string() const
+{
+    if(mpz_sgn(value.value) < 0)
+    {
+        // default printing algorithm doesn't work for negative numbers
+        std::ostringstream ss;
+        ss << std::hex << std::showbase << std::uppercase << "{value=" << value << ",mask=" << mask
+           << "}";
+        auto retval = ss.str();
+        for(char &ch : retval)
+            if(ch == 'X')
+                ch = 'x';
+        return retval;
+    }
+    std::string retval;
+    std::size_t baseBitCount;
+    if(isHexadecimalMask())
+    {
+        baseBitCount = 4;
+        retval = "x0";
+    }
+    else if(isOctalMask())
+    {
+        baseBitCount = 3;
+        retval = "o0";
+    }
+    else
+    {
+        baseBitCount = 1;
+        retval = "b0";
+    }
+    auto value = this->value;
+    auto mask = this->mask;
+    while(mpz_sgn(value.value) != 0
+          || (mpz_cmp_si(mask.value, -1) != 0 && mpz_sgn(mask.value) != 0))
+    {
+        auto digitValue = mpz_fdiv_ui(value, 1UL << baseBitCount);
+        auto digitMask = mpz_fdiv_ui(mask, 1UL << baseBitCount);
+        mpz_fdiv_q_2exp(value, value, baseBitCount);
+        mpz_fdiv_q_2exp(mask, mask, baseBitCount);
+        if(digitMask == 0)
+            retval += '?';
+        else if(digitValue < 10)
+            retval += '0' + digitValue;
+        else
+            retval += 'A' + digitValue - 10;
+    }
+    std::reverse(retval.begin(), retval.end());
+    return retval;
+}
+
+namespace
+{
+template <std::size_t BitCount>
+bool isPowerOf2BaseMask(math::GMPInteger mask)
+{
+    if(BitCount < 2)
+        return true;
+    while(mpz_cmp_si(mask.value, -1) != 0 && mpz_sgn(mask.value) != 0)
+    {
+        auto digitBits = mpz_fdiv_ui(mask, 1UL << BitCount);
+        if(digitBits != 0 && digitBits != (1UL << BitCount) - 1)
+            return false;
+        mpz_fdiv_q_2exp(mask, mask, BitCount);
+    }
+    return true;
+}
+}
+
+bool Token::IntegerValue::isHexadecimalMask() const
+{
+    constexpr std::size_t bitsPerDigit = 4;
+    return isPowerOf2BaseMask<bitsPerDigit>(mask);
+}
+
+bool Token::IntegerValue::isOctalMask() const
+{
+    constexpr std::size_t bitsPerDigit = 3;
+    return isPowerOf2BaseMask<bitsPerDigit>(mask);
 }
 }

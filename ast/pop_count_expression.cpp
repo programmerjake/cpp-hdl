@@ -21,5 +21,13 @@
 
 namespace ast
 {
-#error finish dump functions
+void PopCountExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::PopCountExpression";
+    state.setSimple(dumpNode, "beforePopCountComments", beforePopCountComments);
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "expression", expression);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

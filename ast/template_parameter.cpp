@@ -21,5 +21,13 @@
 
 namespace ast
 {
-#error finish dump functions
+void TemplateParameter::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TemplateParameter";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeDotDotDotComments", beforeDotDotDotComments);
+    state.setSimple(dumpNode, "hasDotDotDot", hasDotDotDot);
+}
 }

@@ -18,8 +18,24 @@
  */
 
 #include "template_arguments.h"
+#include <sstream>
 
 namespace ast
 {
-#error finish dump functions
+void TemplateArguments::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TemplateArguments";
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    state.setPointer(dumpNode, "firstArgument", firstArgument);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "argument", part.argument);
+    }
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

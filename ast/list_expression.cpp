@@ -18,8 +18,24 @@
  */
 
 #include "list_expression.h"
+#include <sstream>
 
 namespace ast
 {
-#error finish dump functions
+void ListExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ListExpression";
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setPointer(dumpNode, ss.str() + "part", part.part);
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+    }
+    state.setSimple(dumpNode, "hasTrailingComma", hasTrailingComma);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

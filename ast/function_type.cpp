@@ -18,6 +18,7 @@
  */
 
 #include "function_type.h"
+#include <sstream>
 
 namespace ast
 {

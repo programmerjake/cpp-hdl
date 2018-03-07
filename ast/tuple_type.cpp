@@ -21,5 +21,20 @@
 
 namespace ast
 {
-#error finish dump functions
+void TupleType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TupleType";
+    state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setPointer(dumpNode, ss.str() + "part", part.part);
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+    }
+    state.setSimple(dumpNode, "hasTrailingComma", hasTrailingComma);
+    state.setSimple(dumpNode, "beforeRBraceComments", beforeRBraceComments);
+}
 }

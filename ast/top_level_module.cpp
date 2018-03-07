@@ -21,5 +21,12 @@
 
 namespace ast
 {
-#error finish dump functions
+void TopLevelModule::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TopLevelModule";
+    state.setPointerArray(dumpNode, "imports", imports);
+    state.setPointer(dumpNode, "mainModule", mainModule);
+    state.setSimple(dumpNode, "beforeEndOfFileComments", beforeEndOfFileComments);
+}
 }

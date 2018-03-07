@@ -18,6 +18,7 @@
  */
 
 #include "input_output_statement_name.h"
+#include "input_output_statement_part.h"
 
 namespace ast
 {

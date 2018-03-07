@@ -21,5 +21,10 @@
 
 namespace ast
 {
-#error finish dump functions
+void ScopedIdExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ScopedIdExpression";
+    state.setPointer(dumpNode, "value", value);
+}
 }

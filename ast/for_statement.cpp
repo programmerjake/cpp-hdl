@@ -46,9 +46,6 @@ void ForStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     GenericForStatement::dump(dumpNode, state);
     dumpNode->nodeName = "ast::ForStatement";
-    Expression *firstExpression;
-    ConsecutiveComments beforeToComments;
-    Expression *secondExpression;
     state.setPointer(dumpNode, "firstExpression", firstExpression);
     state.setSimple(dumpNode, "beforeToComments", beforeToComments);
     state.setPointer(dumpNode, "secondExpression", secondExpression);

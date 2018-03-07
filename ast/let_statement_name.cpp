@@ -18,8 +18,16 @@
  */
 
 #include "let_statement_name.h"
+#include "let_statement_part.h"
 
 namespace ast
 {
-#error finish dump functions
+void LetStatementName::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::LetStatementName";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "parentPart", parentPart);
+}
 }

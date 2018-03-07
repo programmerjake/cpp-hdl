@@ -21,5 +21,15 @@
 
 namespace ast
 {
-#error finish dump functions
+void TypeStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::TypeStatement";
+    state.setSimple(dumpNode, "beforeTypeComments", beforeTypeComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeEqualComments", beforeEqualComments);
+    state.setPointer(dumpNode, "type", type);
+    state.setSimple(dumpNode, "beforeSemicolonComments", beforeSemicolonComments);
+}
 }

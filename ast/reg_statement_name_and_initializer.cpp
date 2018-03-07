@@ -18,8 +18,18 @@
  */
 
 #include "reg_statement_name_and_initializer.h"
+#include "reg_statement.h"
 
 namespace ast
 {
-#error finish dump functions
+void RegStatementNameAndInitializer::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::RegStatementNameAndInitializer";
+    state.setSimple(dumpNode, "beforeRegComments", beforeNameComments);
+    state.setSimple(dumpNode, "beforeEqualComments", beforeEqualComments);
+    state.setPointer(dumpNode, "initializer", initializer);
+    state.setPointer(dumpNode, "parentPart", parentPart);
+}
 }

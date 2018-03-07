@@ -39,5 +39,4 @@ void FunctionCallExpression::dump(util::DumpTree *dumpNode, util::DumpState &sta
     }
     state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
 }
-#error finish dump functions
 }

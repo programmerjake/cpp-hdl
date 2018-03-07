@@ -21,5 +21,12 @@
 
 namespace ast
 {
-#error finish dump functions
+void ParenExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ParenExpression";
+    state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
+    state.setPointer(dumpNode, "expression", expression);
+    state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
+}
 }

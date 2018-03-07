@@ -21,5 +21,15 @@
 
 namespace ast
 {
-#error finish dump functions
+void MemoryType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MemoryType";
+    state.setSimple(dumpNode, "beforeMemoryComments", beforeMemoryComments);
+    state.setSimple(dumpNode, "beforeLBracketComments", beforeLBracketComments);
+    state.setPointer(dumpNode, "size", size);
+    state.setSimple(dumpNode, "beforeRBracketComments", beforeRBracketComments);
+    state.setSimple(dumpNode, "beforeColonComments", beforeColonComments);
+    state.setPointer(dumpNode, "elementType", elementType);
+}
 }

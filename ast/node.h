@@ -35,7 +35,7 @@ public:
     virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const = 0;
 };
 
-void utilDumpFunction(const Node *sourceNode, util::DumpTree *dumpNode, util::DumpState &state)
+inline void utilDumpFunction(const Node *sourceNode, util::DumpTree *dumpNode, util::DumpState &state)
 {
     sourceNode->dump(dumpNode, state);
 }

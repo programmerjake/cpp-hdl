@@ -21,5 +21,10 @@
 
 namespace ast
 {
-#error finish dump functions
+void ModuleStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ModuleStatement";
+    state.setPointer(dumpNode, "value", value);
+}
 }

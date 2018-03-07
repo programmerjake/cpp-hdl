@@ -21,5 +21,10 @@
 
 namespace ast
 {
-#error finish dump functions
+void ScopedIdType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Type::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ScopedIdType";
+    state.setPointer(dumpNode, "value", value);
+}
 }

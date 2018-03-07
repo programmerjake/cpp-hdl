@@ -21,5 +21,10 @@
 
 namespace ast
 {
-#error finish dump functions
+void InterfaceStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Statement::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::InterfaceStatement";
+    state.setPointer(dumpNode, "value", value);
+}
 }

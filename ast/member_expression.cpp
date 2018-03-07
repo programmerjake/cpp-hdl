@@ -21,5 +21,14 @@
 
 namespace ast
 {
-#error finish dump functions
+void MemberExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MemberExpression";
+    state.setPointer(dumpNode, "compositeValue", compositeValue);
+    state.setSimple(dumpNode, "beforeDotComments", beforeDotComments);
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setSimple(dumpNode, "nameLocationRange", nameLocationRange);
+    state.setSimple(dumpNode, "name", name);
+}
 }

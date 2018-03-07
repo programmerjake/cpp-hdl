@@ -140,7 +140,7 @@ private:
         ss << std::forward<T>(value);
         return ss.str();
     }
-    static std::string valueToString(const std::string *value)
+    static std::string valueToString(const StringPool::Entry &value)
     {
         if(!value)
             return "<nullptr>";

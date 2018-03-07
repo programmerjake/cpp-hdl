@@ -21,5 +21,11 @@
 
 namespace ast
 {
-#error finish dump functions
+void NumberExpression::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Expression::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::NumberExpression";
+    state.setSimple(dumpNode, "beforeNumberComments", beforeNumberComments);
+    state.setSimple(dumpNode, "value", value);
+}
 }

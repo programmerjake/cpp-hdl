@@ -18,8 +18,24 @@
  */
 
 #include "match_statement_part.h"
+#include <sstream>
 
 namespace ast
 {
-#error finish dump functions
+void MatchStatementPart::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::MatchStatementPart";
+    state.setPointer(dumpNode, "firstMatchPattern", firstMatchPattern);
+    for(std::size_t i = 0; i < parts.size(); i++)
+    {
+        auto &part = parts[i];
+        std::ostringstream ss;
+        ss << "parts[" << i << "].";
+        state.setSimple(dumpNode, ss.str() + "beforeCommaComments", part.beforeCommaComments);
+        state.setPointer(dumpNode, ss.str() + "matchPattern", part.matchPattern);
+    }
+    state.setSimple(dumpNode, "beforeEqualRAngleComments", beforeEqualRAngleComments);
+    state.setPointer(dumpNode, "statement", statement);
+}
 }
