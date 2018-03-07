@@ -133,6 +133,13 @@ struct GMPInteger
         for(std::size_t i = 0; i < baseIndicator.size(); i++)
             buffer[i] = baseIndicator[i];
         mpz_get_str(buffer.get() + baseIndicator.size(), base, value);
+        if(buffer.get()[baseIndicator.size()] == '-')
+        {
+            // put sign before base indicator
+            buffer[0] = '-';
+            for(std::size_t i = 0; i < baseIndicator.size(); i++)
+                buffer[i + 1] = baseIndicator[i];
+        }
         os << buffer.get();
         return os;
     }
