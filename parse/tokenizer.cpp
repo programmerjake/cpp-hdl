@@ -52,97 +52,11 @@ struct Tokenizer::TokenParser
             return eof;
         return static_cast<unsigned char>(sourceText[currentLocation.offset++]);
     }
-    static constexpr bool isWhitespace(int ch) noexcept
-    {
-        switch(ch)
-        {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-            return true;
-        default:
-            return false;
-        }
-    }
-    static constexpr bool isLineCommentTerminator(int ch) noexcept
-    {
-        switch(ch)
-        {
-        case eof:
-        case '\r':
-        case '\n':
-            return true;
-        default:
-            return false;
-        }
-    }
-    static constexpr bool isDigit(int ch) noexcept
-    {
-        if(ch >= '0' && ch <= '9')
-            return true;
-        return false;
-    }
-    static constexpr bool isUpper(int ch) noexcept
-    {
-        if(ch >= 'A' && ch <= 'Z')
-            return true;
-        return false;
-    }
-    static constexpr bool isLower(int ch) noexcept
-    {
-        if(ch >= 'a' && ch <= 'z')
-            return true;
-        return false;
-    }
-    static constexpr bool isIdentifierStart(int ch) noexcept
-    {
-        if(ch >= 0x80) // all multi-byte UTF-8 characters
-            return true;
-        if(isLower(ch))
-            return true;
-        if(isUpper(ch))
-            return true;
-        if(ch == '_')
-            return true;
-        return false;
-    }
-    static constexpr bool isIdentifierContinue(int ch) noexcept
-    {
-        if(isIdentifierStart(ch))
-            return true;
-        if(isDigit(ch))
-            return true;
-        return false;
-    }
-    static constexpr int getDigitValue(int ch) noexcept
-    {
-        if(ch >= '0' && ch <= '9')
-            return ch - '0';
-        if(ch >= 'a' && ch <= 'z')
-            return ch - 'a' + 0xA;
-        if(ch >= 'A' && ch <= 'Z')
-            return ch - 'A' + 0xA;
-        return -1;
-    }
-    static constexpr int getDigitValue(int ch, int base) noexcept
-    {
-        int retval = getDigitValue(ch);
-        if(retval >= base)
-            return -1;
-        return retval;
-    }
-    static constexpr bool isDigitSeparator(int ch) noexcept
-    {
-        if(ch == '_' || ch == '\'')
-            return true;
-        return false;
-    }
     Token parseToken()
     {
-        while(isWhitespace(peek()) || peek() == '/')
+        while(CharProperties<CharType>::isWhitespace(peek()) || peek() == '/')
         {
-            while(isWhitespace(peek()))
+            while(CharProperties<CharType>::isWhitespace(peek()))
                 get();
             if(peek() == '/')
             {
@@ -150,7 +64,7 @@ struct Tokenizer::TokenParser
                 get();
                 if(peek() == '/')
                 {
-                    while(!isLineCommentTerminator(peek()))
+                    while(!CharProperties<CharType>::isLineCommentTerminator(peek()))
                         get();
                     return Token(TokenType::LineComment,
                                  LocationRange(startLocation, currentLocation));
@@ -182,12 +96,12 @@ struct Tokenizer::TokenParser
             return retval;
         }
         Location startLocation = currentLocation;
-        if(isIdentifierStart(peek()))
+        if(CharProperties<CharType>::isIdentifierStart(peek()))
         {
             do
             {
                 get();
-            } while(isIdentifierContinue(peek()));
+            } while(CharProperties<CharType>::isIdentifierContinue(peek()));
             LocationRange locationRange(startLocation, currentLocation);
             auto tokenText = locationRange.getText();
             typedef std::underlying_type_t<TokenType> TokenUnderlyingType;
@@ -204,7 +118,7 @@ struct Tokenizer::TokenParser
             }
             return Token(tokenType, locationRange);
         }
-        if(isDigit(peek()))
+        if(CharProperties<CharType>::isDigit(peek()))
         {
             auto tokenType = TokenType::UnprefixedDecimalLiteralInteger;
             TokenType patternTokenType{};
@@ -212,6 +126,7 @@ struct Tokenizer::TokenParser
             int base = 10;
             bool patternAllowed = false;
             bool isPattern = false;
+            bool lastWasDigit = true;
             if(peek() == '0')
             {
                 get();
@@ -221,6 +136,7 @@ struct Tokenizer::TokenParser
                     tokenType = TokenType::BinaryLiteralInteger;
                     patternAllowed = true;
                     patternTokenType = TokenType::BinaryLiteralIntegerPattern;
+                    lastWasDigit = false;
                     get();
                     base = 2;
                 }
@@ -230,6 +146,7 @@ struct Tokenizer::TokenParser
                     tokenType = TokenType::HexadecimalLiteralInteger;
                     patternAllowed = true;
                     patternTokenType = TokenType::HexadecimalLiteralIntegerPattern;
+                    lastWasDigit = false;
                     get();
                     base = 16;
                 }
@@ -239,6 +156,7 @@ struct Tokenizer::TokenParser
                     tokenType = TokenType::OctalLiteralInteger;
                     patternAllowed = true;
                     patternTokenType = TokenType::OctalLiteralIntegerPattern;
+                    lastWasDigit = false;
                     get();
                     base = 8;
                 }
@@ -246,10 +164,12 @@ struct Tokenizer::TokenParser
                 {
                     hasDigits = false;
                     tokenType = TokenType::DecimalLiteralInteger;
+                    lastWasDigit = false;
                     get();
                     base = 10;
                 }
-                else if(isDigit(peek()))
+                else if(CharProperties<CharType>::isDigit(peek())
+                        || CharProperties<CharType>::isDigitSeparator(peek()))
                 {
                     throw ParseError(currentLocation,
                                      "number must not have leading zeros (for octal, use '0o377')");
@@ -260,8 +180,22 @@ struct Tokenizer::TokenParser
                 }
             }
             constexpr IntType wildcardChar = '?';
-            while(getDigitValue(peek(), base) >= 0 || peek() == wildcardChar)
+            bool lastWasSeparator = false;
+            while(CharProperties<CharType>::getDigitValue(peek(), base) >= 0
+                  || peek() == wildcardChar
+                  || CharProperties<CharType>::isDigitSeparator(peek()))
             {
+                if(CharProperties<CharType>::isDigitSeparator(peek()))
+                {
+                    if(!lastWasDigit)
+                        throw ParseError(currentLocation,
+                                         "digit separator must be preceded by a digit or wildcard");
+                    lastWasDigit = false;
+                    lastWasSeparator = true;
+                    get();
+                }
+                lastWasDigit = true;
+                lastWasSeparator = false;
                 if(get() == wildcardChar)
                 {
                     if(!patternAllowed)
@@ -271,10 +205,12 @@ struct Tokenizer::TokenParser
                 }
                 hasDigits = true;
             }
-            if(getDigitValue(peek()) >= base)
+            if(CharProperties<CharType>::getDigitValue(peek()) >= base)
                 throw ParseError(currentLocation, "digit too big for number");
             if(!hasDigits)
                 throw ParseError(currentLocation, "number is missing digits after base indicator");
+            if(lastWasSeparator)
+                throw ParseError(currentLocation, "digit separator must be followed by a digit or wildcard");
             if(isPattern)
                 tokenType = patternTokenType;
             return Token(tokenType, LocationRange(startLocation, currentLocation));

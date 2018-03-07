@@ -23,16 +23,16 @@ Import : "import" ID ";";
 
 Module : "module" ID TemplateParameters? ("implements" Type)? "{" Statement* "}";
 
-TemplateParameters : "{" ( TemplateParameter ("," TemplateParameter)* )? "}";
+TemplateParameters : "!" "{" ( TemplateParameter ("," TemplateParameter)* )? "}";
 
 TemplateParameter : "type" ID ("implements" Type)? "..."?
                   | ID ":" Type "..."?;
 
 Interface : "interface" ID TemplateParameters? ("implements" Type)? "{" Statement* "}";
 
-Enum : "enum" ID ":" Type "{" (EnumPart ("," EnumPart)*) ","? "}";
+Enum : "enum" ID (":" Type)? "{" (EnumPart ("," EnumPart)*) ","? "}";
 
-EnumPart : ID "=" Expression;
+EnumPart : ID ("=" Expression)?;
 
 Function : "function" ID TemplateParameters? "(" (FunctionParameter ("," FunctionParameter)*)? ")" (":" Type)? "{" Statement* "}";
 
@@ -81,7 +81,7 @@ Expression : ScopedId
            | NUMBER
            | "(" Expression ")"
            | "{" (Expression ",")* (Expression ","?)? "}"
-           | "cast" "{" Type "}" "(" Expression ")"
+           | "cast" "!" "{" Type "}" "(" Expression ")"
            | "fill" "(" Expression "," Expression ")"
            | "cat" "(" Expression ("," Expression)* ")"
            | "popCount" "(" Expression ")"
@@ -121,7 +121,7 @@ Expression : ScopedId
 ScopedId : "::"? ID TemplateArguments?
          | ScopedId "::" ID TemplateArguments?;
 
-TemplateArguments : "{" (TemplateArgument ("," TemplateArgument)*)? "}";
+TemplateArguments : "!" "{" (TemplateArgument ("," TemplateArgument)*)? "}";
 
 TemplateArgument : "type" Type
                  | Expression;
@@ -129,8 +129,8 @@ TemplateArgument : "type" Type
 Type : ScopedId
      | "flip" Type
      | "typeOf" "(" Expression ")"
-     | "uint" "{" Expression "}"
-     | "sint" "{" Expression "}"
+     | "uint" "!" "{" Expression "}"
+     | "sint" "!" "{" Expression "}"
      | "u8"
      | "u16"
      | "u32"

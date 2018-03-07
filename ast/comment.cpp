@@ -26,7 +26,7 @@ namespace ast
 {
 void ConsecutiveComments::iterator::parseValue() const noexcept
 {
-    assert(value.locationRange);
+    assert(location);
     nextLocation = location;
     try
     {

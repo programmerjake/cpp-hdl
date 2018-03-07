@@ -40,7 +40,8 @@ int main(int argc, char **argv)
             util::Arena dumpArena;
             util::DumpState dumpState(dumpArena, context.stringPool);
             auto *dumpTree = dumpState.getDumpNode(tree);
-            static_cast<void>(dumpTree);
+            util::DumpTree::writeJSON(std::cout, dumpTree);
+            std::cout << std::endl;
 #warning finish
         }
         catch(parse::ParseError &e)

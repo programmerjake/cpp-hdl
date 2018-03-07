@@ -76,6 +76,8 @@ Token::IntegerValue Token::getIntegerValue() const
     math::GMPInteger mask(-1L);
     for(unsigned char ch : text)
     {
+        if(CharProperties<char>::isDigitSeparator(ch))
+            continue;
         int digitValue = CharProperties<char>::getDigitValue(ch, base);
         bool isWildcard = digitValue < 0;
         mpz_mul_ui(value, value, base);
@@ -83,9 +85,9 @@ Token::IntegerValue Token::getIntegerValue() const
             mpz_add_ui(value, value, digitValue);
         if(isPattern)
         {
-            mpz_mul_ui(value, value, base);
+            mpz_mul_ui(mask, mask, base);
             if(!isWildcard)
-                mpz_add_ui(value, value, base - 1);
+                mpz_add_ui(mask, mask, base - 1);
         }
     }
     return {std::move(value), std::move(mask)};
@@ -105,25 +107,28 @@ Token::IntegerValue::operator std::string() const
                 ch = 'x';
         return retval;
     }
-    std::string retval;
+    std::string retval = "0 ";
     std::size_t baseBitCount;
     if(isHexadecimalMask())
     {
         baseBitCount = 4;
-        retval = "x0";
+        retval[1] = 'x';
     }
     else if(isOctalMask())
     {
         baseBitCount = 3;
-        retval = "o0";
+        retval[1] = 'o';
     }
     else
     {
         baseBitCount = 1;
-        retval = "b0";
+        retval[1] = 'b';
     }
     auto value = this->value;
     auto mask = this->mask;
+    constexpr int digitsBetweenSeparator = 4;
+    int digitsBeforeSeparator = digitsBetweenSeparator;
+    constexpr char digitSeparator = '_';
     while(mpz_sgn(value.value) != 0
           || (mpz_cmp_si(mask.value, -1) != 0 && mpz_sgn(mask.value) != 0))
     {
@@ -137,8 +142,15 @@ Token::IntegerValue::operator std::string() const
             retval += '0' + digitValue;
         else
             retval += 'A' + digitValue - 10;
+        if(--digitsBeforeSeparator <= 0)
+        {
+            retval += digitSeparator;
+            digitsBeforeSeparator = digitsBetweenSeparator;
+        }
     }
-    std::reverse(retval.begin(), retval.end());
+    if(retval.back() == digitSeparator)
+        retval.pop_back();
+    std::reverse(retval.begin() + 2, retval.end());
     return retval;
 }
 

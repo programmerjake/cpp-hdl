@@ -1,0 +1,65 @@
+/**
+ * Copyright 2018 Jacob Lifshay
+ *
+ * This file is part of Cpp-HDL.
+ *
+ * Cpp-HDL is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Cpp-HDL is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import a;
+
+module b
+{
+    interface I
+    {
+        input i : bit;
+        output o : u64;
+    }
+    module c!{type T implements I, V : sint!{128}} implements I
+    {
+        input i : bit;
+        output o : u64;
+        reg r = 5 : u64;
+        match(r)
+        {
+            0x?1 =>
+            {
+                r = 23 + r;
+            }
+            0x45 =>
+            {
+                r = 1;
+            }
+            0x????_????_????_???? =>
+            {
+                if(cast!{s64}(r) < 0)
+                    r = r * 2;
+                else
+                    r = 43 - 1;
+            }
+            0o?=>;
+            0o??=>;
+            0o???=>;
+            0o????=>;
+            0o?????=>;
+            0o??????=>;
+        }
+    }
+    enum E
+    {
+        A,
+        B = 1,
+        C = A,
+    }
+}

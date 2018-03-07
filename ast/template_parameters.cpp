@@ -26,6 +26,7 @@ void TemplateParameters::dump(util::DumpTree *dumpNode, util::DumpState &state) 
 {
     Node::dump(dumpNode, state);
     dumpNode->nodeName = "ast::TemplateParameters";
+    state.setSimple(dumpNode, "beforeEMarkComments", beforeEMarkComments);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
     state.setPointer(dumpNode, "firstTemplateParameter", firstTemplateParameter);
     for(std::size_t i = 0; i < parts.size(); i++)

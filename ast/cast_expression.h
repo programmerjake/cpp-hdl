@@ -31,6 +31,7 @@ class CastExpression final : public Expression
 {
 public:
     ConsecutiveComments beforeCastComments;
+    ConsecutiveComments beforeEMarkComments;
     ConsecutiveComments beforeLBraceComments;
     Type *type;
     ConsecutiveComments beforeRBraceComments;
@@ -39,6 +40,7 @@ public:
     ConsecutiveComments beforeRParenComments;
     explicit CastExpression(parse::LocationRange locationRange,
                             ConsecutiveComments beforeCastComments,
+                            ConsecutiveComments beforeEMarkComments,
                             ConsecutiveComments beforeLBraceComments,
                             Type *type,
                             ConsecutiveComments beforeRBraceComments,
@@ -47,6 +49,7 @@ public:
                             ConsecutiveComments beforeRParenComments) noexcept
         : Expression(locationRange),
           beforeCastComments(beforeCastComments),
+          beforeEMarkComments(beforeEMarkComments),
           beforeLBraceComments(beforeLBraceComments),
           type(type),
           beforeRBraceComments(beforeRBraceComments),

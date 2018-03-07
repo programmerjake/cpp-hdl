@@ -109,18 +109,14 @@ struct Parser
         auto moduleKeyword = matchAndGet(TokenType::Module);
         auto moduleName = matchAndGet(TokenType::Identifier, "expected: module name");
         ast::TemplateParameters *templateParameters = nullptr;
-        if(peek().token.type == TokenType::LAngle)
+        if(peek().token.type == TokenType::EMark)
             templateParameters = parseTemplateParameters();
         CommentsAndToken implementsKeyword = {};
         ast::Type *parentType = nullptr;
-        if(implementsKeyword.token.type == TokenType::Implements)
+        if(peek().token.type == TokenType::Implements)
         {
-            get();
+            implementsKeyword = get();
             parentType = parseType();
-        }
-        else
-        {
-            implementsKeyword = {};
         }
         auto openingLBrace = matchAndGet(TokenType::LBrace);
         std::vector<ast::Statement *> statements;
@@ -143,6 +139,7 @@ struct Parser
     ast::TemplateParameters *parseTemplateParameters()
     {
         Location startLocation = peek().token.locationRange.begin();
+        auto eMarkToken = matchAndGet(TokenType::EMark);
         auto openingLBrace = matchAndGet(TokenType::LBrace);
         ast::TemplateParameter *firstTemplateParameter = nullptr;
         std::vector<ast::TemplateParameters::Part> parts;
@@ -159,6 +156,7 @@ struct Parser
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         auto closingRBrace = matchAndGet(TokenType::RBrace);
         return create<ast::TemplateParameters>(locationRange,
+                                               eMarkToken.comments,
                                                openingLBrace.comments,
                                                firstTemplateParameter,
                                                std::move(parts),
@@ -230,7 +228,7 @@ struct Parser
         auto interfaceKeyword = matchAndGet(TokenType::Interface);
         auto interfaceName = matchAndGet(TokenType::Identifier, "expected: interface name");
         ast::TemplateParameters *templateParameters = nullptr;
-        if(peek().token.type == TokenType::LAngle)
+        if(peek().token.type == TokenType::EMark)
             templateParameters = parseTemplateParameters();
         CommentsAndToken implementsKeyword = {};
         ast::Type *parentType = nullptr;
@@ -266,18 +264,29 @@ struct Parser
         Location startLocation = peek().token.locationRange.begin();
         auto enumKeyword = matchAndGet(TokenType::Enum);
         auto enumName = matchAndGet(TokenType::Identifier, "expected: enum name");
-        auto colonToken = matchAndGet(TokenType::Colon);
-        auto *underlyingType = parseType();
+        CommentsAndToken colonToken = {};
+        ast::Type *underlyingType = nullptr;
+        if(peek().token.type == TokenType::Colon)
+        {
+            colonToken = matchAndGet(TokenType::Colon);
+            underlyingType = parseType();
+        }
         auto openingLBrace = matchAndGet(TokenType::LBrace);
         std::vector<ast::Enum::Part> parts;
         while(peek().token.type == TokenType::Identifier)
         {
             auto enumValueName = get();
-            auto equalToken = matchAndGet(TokenType::Equal);
-            auto *value = parseExpression();
+            auto locationRange = enumValueName.token.locationRange;
+            CommentsAndToken equalToken = {};
+            ast::Expression *value = nullptr;
+            if(peek().token.type == TokenType::Equal)
+            {
+                equalToken = get();
+                value = parseExpression();
+                locationRange.setEnd(value->locationRange.end());
+            }
             auto *enumPart =
-                create<ast::EnumPart>(LocationRange(enumValueName.token.locationRange.begin(),
-                                                    value->locationRange.end()),
+                create<ast::EnumPart>(locationRange,
                                       enumValueName.comments,
                                       enumValueName.token.locationRange,
                                       context.stringPool.intern(enumValueName.token.getText()),
@@ -314,7 +323,7 @@ struct Parser
         auto functionKeyword = matchAndGet(TokenType::Function);
         auto functionName = matchAndGet(TokenType::Identifier, "expected: function name");
         ast::TemplateParameters *templateParameters = nullptr;
-        if(peek().token.type == TokenType::LAngle)
+        if(peek().token.type == TokenType::EMark)
             templateParameters = parseTemplateParameters();
         auto openingLParen = matchAndGet(TokenType::LParen);
         ast::FunctionParameter *firstParameter = nullptr;
@@ -885,6 +894,7 @@ struct Parser
         case TokenType::Cast:
         {
             auto castToken = get();
+            auto eMarkToken = matchAndGet(TokenType::EMark);
             auto openingLBrace = matchAndGet(TokenType::LBrace);
             auto *type = parseType();
             auto closingRBrace = matchAndGet(TokenType::RBrace);
@@ -895,6 +905,7 @@ struct Parser
                 LocationRange(castToken.token.locationRange.begin(),
                               closingRParen.token.locationRange.end()),
                 castToken.comments,
+                eMarkToken.comments,
                 openingLBrace.comments,
                 type,
                 closingRBrace.comments,
@@ -1026,13 +1037,14 @@ struct Parser
         case TokenType::AmpAmp:
         case TokenType::VBarVBar:
         case TokenType::LAngleMinusRAngle:
-            reportError(peek().token.locationRange, "expected: expression");
-            return nullptr;
+            break;
         }
+        reportError(peek().token.locationRange, "expected: expression");
+        return nullptr;
     }
     ast::Expression *parsePostfixExpression()
     {
-        auto *retval = parseExpression();
+        auto *retval = parsePrimaryExpression();
         while(true)
         {
             if(peek().token.type == TokenType::LParen)
@@ -1557,7 +1569,7 @@ struct Parser
         auto initialName = matchAndGet(TokenType::Identifier, "expected: symbol name");
         locationRange.setEnd(initialName.token.locationRange.end());
         ast::TemplateArguments *initialTemplateArguments = nullptr;
-        if(peek().token.type == TokenType::LBrace)
+        if(peek().token.type == TokenType::EMark)
         {
             initialTemplateArguments = parseTemplateArguments();
             locationRange.setEnd(initialTemplateArguments->locationRange.end());
@@ -1576,7 +1588,7 @@ struct Parser
             auto name = matchAndGet(TokenType::Identifier, "expected: symbol name");
             locationRange.setEnd(name.token.locationRange.end());
             ast::TemplateArguments *templateArguments = nullptr;
-            if(peek().token.type == TokenType::LBrace)
+            if(peek().token.type == TokenType::EMark)
             {
                 templateArguments = parseTemplateArguments();
                 locationRange.setEnd(templateArguments->locationRange.end());
@@ -1594,6 +1606,7 @@ struct Parser
     }
     ast::TemplateArguments *parseTemplateArguments()
     {
+        auto eMarkToken = matchAndGet(TokenType::EMark);
         auto openingLBrace = matchAndGet(TokenType::LBrace);
         ast::TemplateArgument *firstArgument = nullptr;
         std::vector<ast::TemplateArguments::Part> parts;
@@ -1607,9 +1620,10 @@ struct Parser
             }
         }
         auto closingRBrace = matchAndGet(TokenType::RBrace);
-        LocationRange locationRange(openingLBrace.token.locationRange.begin(),
+        LocationRange locationRange(eMarkToken.token.locationRange.begin(),
                                     closingRBrace.token.locationRange.end());
         return create<ast::TemplateArguments>(locationRange,
+                                              eMarkToken.comments,
                                               openingLBrace.comments,
                                               firstArgument,
                                               std::move(parts),
@@ -1662,12 +1676,14 @@ struct Parser
         case TokenType::UInt:
         {
             auto uintToken = get();
+            auto eMarkToken = matchAndGet(TokenType::EMark);
             auto openingLBrace = matchAndGet(TokenType::LBrace);
             auto *bitCount = parseExpression();
             auto closingRBrace = matchAndGet(TokenType::RBrace);
             return create<ast::UIntType>(LocationRange(uintToken.token.locationRange.begin(),
                                                        closingRBrace.token.locationRange.end()),
                                          uintToken.comments,
+                                         eMarkToken.comments,
                                          openingLBrace.comments,
                                          bitCount,
                                          closingRBrace.comments);
@@ -1675,12 +1691,14 @@ struct Parser
         case TokenType::SInt:
         {
             auto sintToken = get();
+            auto eMarkToken = matchAndGet(TokenType::EMark);
             auto openingLBrace = matchAndGet(TokenType::LBrace);
             auto *bitCount = parseExpression();
             auto closingRBrace = matchAndGet(TokenType::RBrace);
             return create<ast::SIntType>(LocationRange(sintToken.token.locationRange.begin(),
                                                        closingRBrace.token.locationRange.end()),
                                          sintToken.comments,
+                                         eMarkToken.comments,
                                          openingLBrace.comments,
                                          bitCount,
                                          closingRBrace.comments);

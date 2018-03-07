@@ -30,3 +30,4 @@ foreach(i ${SOURCES})
     target_sources(parse INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${i}")
 endforeach(i)
 
+target_link_libraries(parse INTERFACE Threads::Threads)

@@ -26,6 +26,7 @@ void TemplateArguments::dump(util::DumpTree *dumpNode, util::DumpState &state) c
 {
     Node::dump(dumpNode, state);
     dumpNode->nodeName = "ast::TemplateArguments";
+    state.setSimple(dumpNode, "beforeEMarkComments", beforeEMarkComments);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
     state.setPointer(dumpNode, "firstArgument", firstArgument);
     for(std::size_t i = 0; i < parts.size(); i++)

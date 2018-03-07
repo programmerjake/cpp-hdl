@@ -42,16 +42,19 @@ public:
         {
         }
     };
+    ConsecutiveComments beforeEMarkComments;
     ConsecutiveComments beforeLBraceComments;
     TemplateParameter *firstTemplateParameter;
     std::vector<Part> parts;
     ConsecutiveComments beforeRBraceComments;
     explicit TemplateParameters(parse::LocationRange locationRange,
+                                ConsecutiveComments beforeEMarkComments,
                                 ConsecutiveComments beforeLBraceComments,
                                 TemplateParameter *firstTemplateParameter,
                                 std::vector<Part> parts,
                                 ConsecutiveComments beforeRBraceComments) noexcept
         : Node(locationRange),
+          beforeEMarkComments(beforeEMarkComments),
           beforeLBraceComments(beforeLBraceComments),
           firstTemplateParameter(firstTemplateParameter),
           parts(std::move(parts)),

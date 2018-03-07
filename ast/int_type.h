@@ -43,16 +43,19 @@ class UIntType final : public IntegerType
 {
 public:
     ConsecutiveComments beforeUIntComments;
+    ConsecutiveComments beforeEMarkComments;
     ConsecutiveComments beforeLBraceComments;
     Expression *bitCount;
     ConsecutiveComments beforeRBraceComments;
     explicit UIntType(parse::LocationRange locationRange,
                       ConsecutiveComments beforeUIntComments,
+                      ConsecutiveComments beforeEMarkComments,
                       ConsecutiveComments beforeLBraceComments,
                       Expression *bitCount,
                       ConsecutiveComments beforeRBraceComments) noexcept
         : IntegerType(locationRange, false),
           beforeUIntComments(beforeUIntComments),
+          beforeEMarkComments(beforeEMarkComments),
           beforeLBraceComments(beforeLBraceComments),
           bitCount(bitCount),
           beforeRBraceComments(beforeRBraceComments)
@@ -65,16 +68,19 @@ class SIntType final : public IntegerType
 {
 public:
     ConsecutiveComments beforeSIntComments;
+    ConsecutiveComments beforeEMarkComments;
     ConsecutiveComments beforeLBraceComments;
     Expression *bitCount;
     ConsecutiveComments beforeRBraceComments;
     explicit SIntType(parse::LocationRange locationRange,
                       ConsecutiveComments beforeSIntComments,
+                      ConsecutiveComments beforeEMarkComments,
                       ConsecutiveComments beforeLBraceComments,
                       Expression *bitCount,
                       ConsecutiveComments beforeRBraceComments) noexcept
         : IntegerType(locationRange, true),
           beforeSIntComments(beforeSIntComments),
+          beforeEMarkComments(beforeEMarkComments),
           beforeLBraceComments(beforeLBraceComments),
           bitCount(bitCount),
           beforeRBraceComments(beforeRBraceComments)

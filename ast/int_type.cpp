@@ -33,6 +33,7 @@ void UIntType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
     IntegerType::dump(dumpNode, state);
     dumpNode->nodeName = "ast::UIntType";
     state.setSimple(dumpNode, "beforeUIntComments", beforeUIntComments);
+    state.setSimple(dumpNode, "beforeEMarkComments", beforeEMarkComments);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
     state.setPointer(dumpNode, "bitCount", bitCount);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
@@ -43,6 +44,7 @@ void SIntType::dump(util::DumpTree *dumpNode, util::DumpState &state) const
     IntegerType::dump(dumpNode, state);
     dumpNode->nodeName = "ast::SIntType";
     state.setSimple(dumpNode, "beforeSIntComments", beforeSIntComments);
+    state.setSimple(dumpNode, "beforeEMarkComments", beforeEMarkComments);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
     state.setPointer(dumpNode, "bitCount", bitCount);
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);

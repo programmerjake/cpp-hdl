@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 add_library(util INTERFACE)
 
-set(SOURCES "")
+set(SOURCES dump_tree.cpp)
 
 foreach(i ${SOURCES})
     target_sources(util INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${i}")

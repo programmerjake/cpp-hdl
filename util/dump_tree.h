@@ -37,6 +37,13 @@ struct DumpTree final
     std::unordered_map<StringPool::Entry, std::string> simpleVariables{};
     std::unordered_map<StringPool::Entry, const DumpTree *> pointerVariables{};
     string_view nodeName;
+    static void writeJSON(std::ostream &os, const DumpTree *tree);
+    static std::string convertToJSON(const DumpTree *tree)
+    {
+        std::ostringstream ss;
+        writeJSON(ss, tree);
+        return ss.str();
+    }
 };
 
 class DumpState;
@@ -126,18 +133,20 @@ private:
         dumpNode->pointerVariables[stringPool.intern(memberName)] = value;
     }
     template <typename T,
-              typename = std::enable_if_t<std::is_convertible<T &&, std::string>::value && !std::is_pointer<std::remove_reference_t<T>>::value>>
+              typename = std::enable_if_t<std::is_convertible<T &&, std::string>::value
+                                          && !std::is_pointer<std::remove_reference_t<T>>::value>>
     static std::string valueToString(T &&value)
     {
         return static_cast<std::string>(std::forward<T>(value));
     }
     template <typename T,
-              typename = std::enable_if_t<!std::is_convertible<T &&, std::string>::value && !std::is_pointer<std::remove_reference_t<T>>::value>,
+              typename = std::enable_if_t<!std::is_convertible<T &&, std::string>::value
+                                          && !std::is_pointer<std::remove_reference_t<T>>::value>,
               typename = void>
     static std::string valueToString(T &&value)
     {
         std::ostringstream ss;
-        ss << std::forward<T>(value);
+        ss << std::boolalpha << std::forward<T>(value);
         return ss.str();
     }
     static std::string valueToString(const StringPool::Entry &value)
