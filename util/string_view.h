@@ -95,8 +95,10 @@ public:
     {
     }
     constexpr basic_string_view(const Char_type *str)
-        : string_pointer(str), string_size(traits_type::length(str))
+        : string_pointer(str), string_size(0)
     {
+        while(str[string_size])
+            string_size++;
     }
     constexpr basic_string_view &operator=(const basic_string_view &) noexcept = default;
     constexpr const_iterator begin() const noexcept
