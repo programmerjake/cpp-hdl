@@ -29,6 +29,7 @@
 #include "arena.h"
 #include <type_traits>
 #include <vector>
+#include "../parse/character_properties.h"
 
 namespace util
 {
@@ -44,7 +45,135 @@ struct DumpTree final
         writeJSON(ss, tree);
         return ss.str();
     }
+    struct NamePart final
+    {
+        enum class Kind
+        {
+            Text,
+            Number,
+        };
+        string_view text;
+        Kind kind;
+        constexpr NamePart() noexcept : text(), kind(Kind::Text)
+        {
+        }
+        constexpr NamePart(string_view text, Kind kind) noexcept : text(text), kind(kind)
+        {
+        }
+        constexpr explicit operator bool() const noexcept
+        {
+            return !text.empty();
+        }
+    };
+    struct NameParser final
+    {
+        string_view name;
+        bool tryToParseNumber = false;
+        constexpr explicit NameParser(string_view name) noexcept : name(name)
+        {
+        }
+        constexpr NamePart peek() const noexcept
+        {
+            auto temp = *this;
+            return temp.get();
+        }
+
+    private:
+        static constexpr bool isDigit(char ch) noexcept
+        {
+            return parse::CharProperties<char>::isDigit(std::char_traits<char>::to_int_type(ch));
+        }
+
+    public:
+        constexpr NamePart get() noexcept
+        {
+            if(name.empty())
+                return {};
+            if(tryToParseNumber)
+            {
+                tryToParseNumber = false;
+                std::size_t charCount{};
+                for(charCount = 0; charCount < name.size(); charCount++)
+                {
+                    if(!isDigit(name[charCount]))
+                        break;
+                }
+                if(charCount > 0)
+                {
+                    auto part = name.substr(0, charCount);
+                    name.remove_prefix(charCount);
+                    return {part, NamePart::Kind::Number};
+                }
+            }
+            std::size_t charCount{};
+            char lastChar = name[0];
+            for(charCount = 1; charCount < name.size(); charCount++)
+            {
+                if(lastChar == '[' && isDigit(name[charCount]))
+                {
+                    tryToParseNumber = true;
+                    break;
+                }
+                lastChar = name[charCount];
+            }
+            auto part = name.substr(0, charCount);
+            name.remove_prefix(charCount);
+            return {part, NamePart::Kind::Text};
+        }
+    };
+    static constexpr int compareNames(string_view a, string_view b) noexcept
+    {
+        NameParser parserA{a}, parserB{b};
+        while(true)
+        {
+            auto partA = parserA.get();
+            auto partB = parserB.get();
+            if(!partA)
+                return partB ? -1 : 0;
+            if(!partB)
+                return 1;
+            if(partA.kind == NamePart::Kind::Number && partB.kind == NamePart::Kind::Number)
+            {
+                while(!partA.text.empty() && partA.text[0] == '0')
+                    partA.text.remove_prefix(1);
+                while(!partB.text.empty() && partB.text[0] == '0')
+                    partB.text.remove_prefix(1);
+                if(partA.text.size() > partB.text.size())
+                    return 1;
+                if(partA.text.size() < partB.text.size())
+                    return -1;
+                for(std::size_t i = 0; i < partA.text.size(); i++)
+                {
+                    unsigned char chA = partA.text[i];
+                    unsigned char chB = partB.text[i];
+                    if(chA > chB)
+                        return 1;
+                    if(chA < chB)
+                        return -1;
+                }
+            }
+            else
+            {
+                for(std::size_t i = 0; i < partA.text.size() && i < partB.text.size(); i++)
+                {
+                    unsigned char chA = partA.text[i];
+                    unsigned char chB = partB.text[i];
+                    if(chA > chB)
+                        return 1;
+                    if(chA < chB)
+                        return -1;
+                }
+                if(partA.text.size() > partB.text.size())
+                    return 1;
+                if(partA.text.size() < partB.text.size())
+                    return -1;
+            }
+        }
+    }
 };
+
+static_assert(DumpTree::compareNames("", "") == 0, "");
+static_assert(DumpTree::compareNames("[10]", "[9]") > 0, "");
 
 class DumpState;
 
@@ -215,12 +344,7 @@ public:
         setPointerIndexedTypeErased(dumpNode, memberName, index, getDumpNode(value));
     }
     template <typename T>
-    void setSimpleArray(DumpTree *dumpNode, string_view memberName, std::size_t index, T &&value)
-    {
-        setSimpleIndexedTypeErased(dumpNode, memberName, valueToString(std::forward<T>(value)));
-    }
-    template <typename T>
-    void setSimpleIndexed(DumpTree *dumpNode, string_view memberName, const std::vector<T> &value)
+    void setSimpleArray(DumpTree *dumpNode, string_view memberName, const std::vector<T> &value)
     {
         for(std::size_t index = 0; index < value.size(); index++)
             setPointerIndexed(dumpNode, memberName, index, value[index]);

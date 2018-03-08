@@ -118,7 +118,7 @@ void DumpTree::writeJSON(std::ostream &os, const DumpTree *tree)
                       simpleVariables.end(),
                       [](auto &&a, auto &&b) -> bool
                       {
-                          return *std::get<0>(*a) < *std::get<0>(*b);
+                          return compareNames(*std::get<0>(*a), *std::get<0>(*b)) < 0;
                       });
             for(auto &&i : simpleVariables)
             {
@@ -138,7 +138,7 @@ void DumpTree::writeJSON(std::ostream &os, const DumpTree *tree)
                       pointerVariables.end(),
                       [](auto &&a, auto &&b) -> bool
                       {
-                          return *std::get<0>(*a) < *std::get<0>(*b);
+                          return compareNames(*std::get<0>(*a), *std::get<0>(*b)) < 0;
                       });
             bool needNewline = true;
             for(std::size_t i = 0, end = pointerVariables.size(); i < end; i++)

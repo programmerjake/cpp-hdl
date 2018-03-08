@@ -31,7 +31,7 @@ struct ConsecutiveComments
     parse::LocationRange locationRange;
     class iterator
     {
-        friend class ConsecutiveComments;
+        friend struct ConsecutiveComments;
 
     private:
         class TokenWrapper final
