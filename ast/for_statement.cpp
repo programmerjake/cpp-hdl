@@ -24,14 +24,23 @@ namespace ast
 void GenericForStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Statement::dump(dumpNode, state);
-    Symbol::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::GenericForStatement";
     state.setSimple(dumpNode, "beforeForComments", beforeForComments);
     state.setSimple(dumpNode, "beforeLParenComments", beforeLParenComments);
-    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "variable", variable);
     state.setSimple(dumpNode, "beforeInComments", beforeInComments);
     state.setSimple(dumpNode, "beforeRParenComments", beforeRParenComments);
     state.setPointer(dumpNode, "statement", statement);
+}
+
+void ForStatementVariable::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    Node::dump(dumpNode, state);
+    Symbol::dump(dumpNode, state);
+    dumpNode->nodeName = "ast::ForStatementVariable";
+    state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);
+    state.setPointer(dumpNode, "forStatement", forStatement);
 }
 
 void ForTypeStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const

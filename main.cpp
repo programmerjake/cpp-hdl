@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "parse/parse_error.h"
 #include "parse/parser.h"
 #include "parse/source.h"
@@ -40,8 +41,8 @@ int main(int argc, char **argv)
             util::Arena dumpArena;
             util::DumpState dumpState(dumpArena, context.stringPool);
             auto *dumpTree = dumpState.getDumpNode(tree);
-            util::DumpTree::writeJSON(std::cout, dumpTree);
-            std::cout << std::endl;
+            std::ofstream os("out.gv");
+            util::DumpTree::writeGraphvizDOT(os, dumpTree);
 #warning finish
         }
         catch(parse::ParseError &e)

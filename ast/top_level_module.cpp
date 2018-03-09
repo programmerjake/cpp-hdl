@@ -24,6 +24,7 @@ namespace ast
 void TopLevelModule::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Node::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::TopLevelModule";
     state.setPointerArray(dumpNode, "imports", imports);
     state.setPointer(dumpNode, "mainModule", mainModule);

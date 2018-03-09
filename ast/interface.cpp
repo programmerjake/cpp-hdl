@@ -25,6 +25,7 @@ void Interface::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Node::dump(dumpNode, state);
     Symbol::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::Interface";
     state.setSimple(dumpNode, "beforeInterfaceComments", beforeInterfaceComments);
     state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);

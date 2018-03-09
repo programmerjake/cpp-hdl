@@ -17,18 +17,20 @@
  * along with Cpp-HDL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "../util/string_pool.h"
-#include "../util/arena.h"
+#include "symbol_lookup_chain.h"
 
 namespace ast
 {
-class SymbolTable;
-struct Context final
+void SymbolLookupChainNode::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
-    util::StringPool stringPool;
-    util::Arena arena;
-    SymbolTable *globalSymbolTable = nullptr;
-};
+    dumpNode->nodeName = "ast::SymbolLookupChainNode";
+    state.setPointer(dumpNode, "parent", parent);
+    state.setPointer(dumpNode, "symbolTable", symbolTable);
+}
+
+void SymbolLookupChain::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    dumpNode->nodeName = "ast::SymbolLookupChain";
+    state.setPointer(dumpNode, "head", head);
+}
 }

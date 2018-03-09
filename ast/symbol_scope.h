@@ -21,13 +21,14 @@
 
 #include "symbol_table.h"
 #include "symbol_lookup_chain.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
 class SymbolScope
 {
 public:
-    virtual ~SymbolScope() = default;
+    virtual ~SymbolScope() = 0;
     SymbolLookupChain symbolLookupChain; // includes symbolTable
     SymbolTable *symbolTable;
     SymbolScope(SymbolLookupChain symbolLookupChain, SymbolTable *symbolTable) noexcept
@@ -35,5 +36,10 @@ public:
           symbolTable(symbolTable)
     {
     }
+    void dump(util::DumpTree *dumpNode, util::DumpState &state) const;
 };
+
+inline SymbolScope::~SymbolScope()
+{
+}
 }

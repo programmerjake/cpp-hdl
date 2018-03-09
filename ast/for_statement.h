@@ -20,39 +20,43 @@
 #pragma once
 
 #include "statement.h"
-#include "symbol.h"
+#include "symbol_scope.h"
 #include "comment.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "node.h"
+#include "symbol.h"
 #include "type.h"
 #include "expression.h"
 #include "../util/dump_tree.h"
 
 namespace ast
 {
-class GenericForStatement : public Statement, public Symbol
+class ForStatementVariable;
+
+class GenericForStatement : public Statement, public SymbolScope
 {
 public:
     ConsecutiveComments beforeForComments;
     ConsecutiveComments beforeLParenComments;
-    ConsecutiveComments beforeNameComments;
+    ForStatementVariable *variable;
     ConsecutiveComments beforeInComments;
     ConsecutiveComments beforeRParenComments;
     Statement *statement;
     explicit GenericForStatement(parse::LocationRange locationRange,
+                                 SymbolLookupChain symbolLookupChain,
+                                 SymbolTable *symbolTable,
                                  ConsecutiveComments beforeForComments,
                                  ConsecutiveComments beforeLParenComments,
-                                 ConsecutiveComments beforeNameComments,
-                                 parse::LocationRange symbolLocationRange,
-                                 util::StringPool::Entry name,
+                                 ForStatementVariable *variable,
                                  ConsecutiveComments beforeInComments,
                                  ConsecutiveComments beforeRParenComments,
                                  Statement *statement) noexcept
         : Statement(locationRange),
-          Symbol(symbolLocationRange, name),
+          SymbolScope(symbolLookupChain, symbolTable),
           beforeForComments(beforeForComments),
           beforeLParenComments(beforeLParenComments),
-          beforeNameComments(beforeNameComments),
+          variable(variable),
           beforeInComments(beforeInComments),
           beforeRParenComments(beforeRParenComments),
           statement(statement)
@@ -61,28 +65,47 @@ public:
     virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override = 0;
 };
 
+class ForStatementVariable final : public Node, public Symbol
+{
+public:
+    ConsecutiveComments beforeNameComments;
+    GenericForStatement *forStatement;
+    explicit ForStatementVariable(parse::LocationRange locationRange,
+                                  ConsecutiveComments beforeNameComments,
+                                  parse::LocationRange symbolLocationRange,
+                                  util::StringPool::Entry name,
+                                  GenericForStatement *forStatement) noexcept
+        : Node(locationRange),
+          Symbol(symbolLocationRange, name),
+          beforeNameComments(beforeNameComments),
+          forStatement(forStatement)
+    {
+    }
+    virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
+};
+
 class ForTypeStatement final : public GenericForStatement
 {
 public:
     ConsecutiveComments beforeTypeKeywordComments;
     Type *type;
     explicit ForTypeStatement(parse::LocationRange locationRange,
+                              SymbolLookupChain symbolLookupChain,
+                              SymbolTable *symbolTable,
                               ConsecutiveComments beforeForComments,
                               ConsecutiveComments beforeLParenComments,
                               ConsecutiveComments beforeTypeKeywordComments,
-                              ConsecutiveComments beforeNameComments,
-                              parse::LocationRange symbolLocationRange,
-                              util::StringPool::Entry name,
+                              ForStatementVariable *variable,
                               ConsecutiveComments beforeInComments,
                               Type *type,
                               ConsecutiveComments beforeRParenComments,
                               Statement *statement) noexcept
         : GenericForStatement(locationRange,
+                              symbolLookupChain,
+                              symbolTable,
                               beforeForComments,
                               beforeLParenComments,
-                              beforeNameComments,
-                              symbolLocationRange,
-                              name,
+                              variable,
                               beforeInComments,
                               beforeRParenComments,
                               statement),
@@ -100,22 +123,22 @@ public:
     ConsecutiveComments beforeToComments;
     Expression *secondExpression;
     explicit ForStatement(parse::LocationRange locationRange,
+                          SymbolLookupChain symbolLookupChain,
+                          SymbolTable *symbolTable,
                           ConsecutiveComments beforeForComments,
                           ConsecutiveComments beforeLParenComments,
-                          ConsecutiveComments beforeNameComments,
-                          parse::LocationRange symbolLocationRange,
-                          util::StringPool::Entry name,
+                          ForStatementVariable *variable,
                           ConsecutiveComments beforeInComments,
                           Expression *firstExpression,
                           ConsecutiveComments beforeToComments,
                           Expression *secondExpression,
                           ConsecutiveComments beforeRParenComments,
                           Statement *statement) noexcept : GenericForStatement(locationRange,
+                                                                               symbolLookupChain,
+                                                                               symbolTable,
                                                                                beforeForComments,
                                                                                beforeLParenComments,
-                                                                               beforeNameComments,
-                                                                               symbolLocationRange,
-                                                                               name,
+                                                                               variable,
                                                                                beforeInComments,
                                                                                beforeRParenComments,
                                                                                statement),

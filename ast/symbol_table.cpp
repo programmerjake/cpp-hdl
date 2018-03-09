@@ -18,12 +18,26 @@
  */
 
 #include "symbol_table.h"
+#include "node.h"
 
 namespace ast
 {
-SymbolTable *SymbolTable::createGlobalSymbolTable(Context &context)
+SymbolTable *SymbolTable::getGlobalSymbolTable(Context &context)
 {
-    auto *retval = context.arena.create<SymbolTable>();
-    return retval;
+    if(!context.globalSymbolTable)
+    {
+        context.globalSymbolTable = context.arena.create<SymbolTable>();
+    }
+    return context.globalSymbolTable;
+}
+
+void SymbolTable::dump(util::DumpTree *dumpNode, util::DumpState &state) const
+{
+    dumpNode->nodeName = "ast::SymbolTable";
+    for(std::size_t i = 0; i < localSymbolsList.size(); i++)
+    {
+        auto *symbolAsNode = dynamic_cast<Node *>(localSymbolsList[i]);
+        state.setPointerIndexed(dumpNode, "localSymbolsList", i, symbolAsNode);
+    }
 }
 }

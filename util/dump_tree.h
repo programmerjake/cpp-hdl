@@ -45,6 +45,13 @@ struct DumpTree final
         writeJSON(ss, tree);
         return ss.str();
     }
+    static void writeGraphvizDOT(std::ostream &os, const DumpTree *tree);
+    static std::string convertToGraphvizDOT(const DumpTree *tree)
+    {
+        std::ostringstream ss;
+        writeGraphvizDOT(ss, tree);
+        return ss.str();
+    }
     struct NamePart final
     {
         enum class Kind

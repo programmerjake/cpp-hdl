@@ -25,6 +25,7 @@ void Module::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Node::dump(dumpNode, state);
     Symbol::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::Module";
     state.setSimple(dumpNode, "beforeModuleComments", beforeModuleComments);
     state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);

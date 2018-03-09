@@ -29,17 +29,20 @@
 
 namespace ast
 {
-class TopLevelModule final : public Node
+class TopLevelModule final : public Node, public SymbolScope
 {
 public:
     std::vector<Import *> imports;
     Module *mainModule;
     ConsecutiveComments beforeEndOfFileComments;
     explicit TopLevelModule(parse::LocationRange locationRange,
+                            SymbolLookupChain symbolLookupChain,
+                            SymbolTable *symbolTable,
                             std::vector<Import *> imports,
                             Module *mainModule,
                             ConsecutiveComments beforeEndOfFileComments) noexcept
         : Node(locationRange),
+          SymbolScope(symbolLookupChain, symbolTable),
           imports(std::move(imports)),
           mainModule(mainModule),
           beforeEndOfFileComments(beforeEndOfFileComments)

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "statement.h"
+#include "symbol_scope.h"
 #include "comment.h"
 #include "../parse/source.h"
 #include <vector>
@@ -27,17 +28,20 @@
 
 namespace ast
 {
-class BlockStatement final : public Statement
+class BlockStatement final : public Statement, public SymbolScope
 {
 public:
     ConsecutiveComments beforeLBraceComments;
     std::vector<Statement *> statements;
     ConsecutiveComments beforeRBraceComments;
     explicit BlockStatement(parse::LocationRange locationRange,
+                            SymbolLookupChain symbolLookupChain,
+                            SymbolTable *symbolTable,
                             ConsecutiveComments beforeLBraceComments,
                             std::vector<Statement *> statements,
                             ConsecutiveComments beforeRBraceComments) noexcept
         : Statement(locationRange),
+          SymbolScope(symbolLookupChain, symbolTable),
           beforeLBraceComments(beforeLBraceComments),
           statements(std::move(statements)),
           beforeRBraceComments(beforeRBraceComments)

@@ -32,5 +32,6 @@ void ScopedId::dump(util::DumpTree *dumpNode, util::DumpState &state) const
     state.setSimple(dumpNode, "nameLocationRange", nameLocationRange);
     state.setSimple(dumpNode, "name", name);
     state.setPointer(dumpNode, "templateArguments", templateArguments);
+    state.setPointer(dumpNode, "symbolLookupChain", &symbolLookupChain);
 }
 }

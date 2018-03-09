@@ -1,4 +1,6 @@
 /build/
 /.kdev4/
 *.kdev4
-*.cpphdl.v
+*.hdl.v
+*.gv
+*.gv.svg

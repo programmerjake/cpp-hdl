@@ -21,6 +21,7 @@
 
 #include "node.h"
 #include "symbol.h"
+#include "symbol_scope.h"
 #include "comment.h"
 #include "template_parameters.h"
 #include "type.h"
@@ -32,7 +33,7 @@
 
 namespace ast
 {
-class Interface final : public Node, public Symbol
+class Interface final : public Node, public Symbol, public SymbolScope
 {
 public:
     ConsecutiveComments beforeInterfaceComments;
@@ -44,6 +45,8 @@ public:
     std::vector<Statement *> statements;
     ConsecutiveComments beforeRBraceComments;
     explicit Interface(parse::LocationRange locationRange,
+                       SymbolLookupChain symbolLookupChain,
+                       SymbolTable *symbolTable,
                        ConsecutiveComments beforeInterfaceComments,
                        ConsecutiveComments beforeNameComments,
                        parse::LocationRange symbolLocationRange,
@@ -56,6 +59,7 @@ public:
                        ConsecutiveComments beforeRBraceComments) noexcept
         : Node(locationRange),
           Symbol(symbolLocationRange, name),
+          SymbolScope(symbolLookupChain, symbolTable),
           beforeInterfaceComments(beforeInterfaceComments),
           beforeNameComments(beforeNameComments),
           templateParameters(templateParameters),

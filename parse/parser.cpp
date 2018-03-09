@@ -23,6 +23,7 @@
 #include "../ast/ast.h"
 #include <cassert>
 #include <utility>
+#include <type_traits>
 
 namespace parse
 {
@@ -43,6 +44,82 @@ struct Parser
     decltype(new T(std::declval<Args>()...)) create(Args &&... args)
     {
         return context.arena.create<T>(std::forward<Args>(args)...);
+    }
+    ast::SymbolLookupChain currentSymbolLookupChain;
+    ast::SymbolLookupChain globalSymbolLookupChain;
+    template <typename T>
+    class PushValue final
+    {
+    private:
+        T *member;
+        T oldMemberValue;
+
+    public:
+        explicit PushValue(T &member, T newMemberValue)
+            : member(std::addressof(member)), oldMemberValue(std::move(*this->member))
+        {
+            *this->member = std::move(newMemberValue);
+        }
+        PushValue(PushValue &&rt) : member(rt.member), oldMemberValue(std::move(rt.oldMemberValue))
+        {
+            rt.member = nullptr;
+        }
+        PushValue(const PushValue &) = delete;
+        PushValue &operator=(PushValue &&) = delete;
+        PushValue &operator=(const PushValue &) = delete;
+        ~PushValue()
+        {
+            if(member)
+                *member = std::move(oldMemberValue);
+        }
+        T &getOldValue()
+        {
+            return oldMemberValue;
+        }
+    };
+    template <typename T>
+    PushValue<T> makePush(T Parser::*member, std::enable_if_t<true, T> newMemberValue)
+    {
+        return PushValue<T>(this->*member, std::move(newMemberValue));
+    }
+    PushValue<ast::SymbolLookupChain> makePushSymbolLookupChain(
+        ast::SymbolLookupChain newSymbolLookupChain)
+    {
+        return makePush(&Parser::currentSymbolLookupChain, newSymbolLookupChain);
+    }
+    PushValue<ast::SymbolLookupChain> makePushNewSymbolTable()
+    {
+        return makePushSymbolLookupChain(ast::SymbolLookupChain(create<ast::SymbolLookupChainNode>(
+            currentSymbolLookupChain.head, create<ast::SymbolTable>())));
+    }
+    static constexpr util::string_view getDefaultRedefinedSymbolErrorMessage()
+    {
+        return "redefined symbol";
+    }
+    template <typename T>
+    std::enable_if_t<std::is_base_of<ast::Symbol, T>::value, T> *insertSymbolOrReportError(
+        ast::SymbolTable *symbolTable,
+        T *symbol,
+        util::string_view errorMessage = getDefaultRedefinedSymbolErrorMessage())
+    {
+        ast::Symbol *symbolBase = symbol;
+        if(!symbolTable->insert(symbolBase))
+            reportError(symbolBase->symbolLocationRange, std::string(errorMessage));
+        return symbol;
+    }
+    template <typename T>
+    auto insertSymbolInCurrentScopeOrReportError(
+        T *symbol, util::string_view errorMessage = getDefaultRedefinedSymbolErrorMessage())
+    {
+        return insertSymbolOrReportError(
+            currentSymbolLookupChain.head->symbolTable, symbol, errorMessage);
+    }
+    template <typename T>
+    auto insertSymbolInParentScopeOrReportError(
+        T *symbol, util::string_view errorMessage = getDefaultRedefinedSymbolErrorMessage())
+    {
+        return insertSymbolOrReportError(
+            currentSymbolLookupChain.head->parent->symbolTable, symbol, errorMessage);
     }
     explicit Parser(
         ast::Context &context,
@@ -77,6 +154,10 @@ struct Parser
     }
     ast::TopLevelModule *parseTopLevelModule()
     {
+        globalSymbolLookupChain = ast::SymbolLookupChain(create<ast::SymbolLookupChainNode>(
+            nullptr, ast::SymbolTable::getGlobalSymbolTable(context)));
+        currentSymbolLookupChain = globalSymbolLookupChain;
+        auto pushedSymbolLookupChain = makePushNewSymbolTable();
         Location startLocation = peek().token.locationRange.begin();
         std::vector<ast::Import *> imports;
         while(peek().token.type == TokenType::Import)
@@ -86,8 +167,12 @@ struct Parser
             reportError(peek().token.locationRange.begin(), "extra tokens before end-of-file");
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         ast::ConsecutiveComments beforeEndOfFileComments = get().comments;
-        return create<ast::TopLevelModule>(
-            locationRange, std::move(imports), mainModule, beforeEndOfFileComments);
+        return create<ast::TopLevelModule>(locationRange,
+                                           currentSymbolLookupChain,
+                                           currentSymbolLookupChain.head->symbolTable,
+                                           std::move(imports),
+                                           mainModule,
+                                           beforeEndOfFileComments);
     }
     ast::Import *parseImport()
     {
@@ -96,15 +181,17 @@ struct Parser
         auto importName = matchAndGet(TokenType::Identifier, "expected: import name");
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         auto finalSemicolon = matchAndGet(TokenType::Semicolon);
-        return create<ast::Import>(locationRange,
-                                   importKeyword.comments,
-                                   importName.comments,
-                                   importName.token.locationRange,
-                                   context.stringPool.intern(importName.token.getText()),
-                                   finalSemicolon.comments);
+        return insertSymbolInCurrentScopeOrReportError(
+            create<ast::Import>(locationRange,
+                                importKeyword.comments,
+                                importName.comments,
+                                importName.token.locationRange,
+                                context.stringPool.intern(importName.token.getText()),
+                                finalSemicolon.comments));
     }
     ast::Module *parseModule()
     {
+        auto pushedSymbolLookupChain = makePushNewSymbolTable();
         Location startLocation = peek().token.locationRange.begin();
         auto moduleKeyword = matchAndGet(TokenType::Module);
         auto moduleName = matchAndGet(TokenType::Identifier, "expected: module name");
@@ -124,17 +211,20 @@ struct Parser
             statements.push_back(parseStatement());
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         auto closingRBrace = matchAndGet(TokenType::RBrace);
-        return create<ast::Module>(locationRange,
-                                   moduleKeyword.comments,
-                                   moduleName.comments,
-                                   moduleName.token.locationRange,
-                                   context.stringPool.intern(moduleName.token.getText()),
-                                   templateParameters,
-                                   implementsKeyword.comments,
-                                   parentType,
-                                   openingLBrace.comments,
-                                   std::move(statements),
-                                   closingRBrace.comments);
+        return insertSymbolInParentScopeOrReportError(
+            create<ast::Module>(locationRange,
+                                currentSymbolLookupChain,
+                                currentSymbolLookupChain.head->symbolTable,
+                                moduleKeyword.comments,
+                                moduleName.comments,
+                                moduleName.token.locationRange,
+                                context.stringPool.intern(moduleName.token.getText()),
+                                templateParameters,
+                                implementsKeyword.comments,
+                                parentType,
+                                openingLBrace.comments,
+                                std::move(statements),
+                                closingRBrace.comments));
     }
     ast::TemplateParameters *parseTemplateParameters()
     {
@@ -185,7 +275,7 @@ struct Parser
                 dotDotDotToken = get();
                 locationRange.setEnd(dotDotDotToken.token.locationRange.end());
             }
-            return create<ast::TypeTemplateParameter>(
+            return insertSymbolInCurrentScopeOrReportError(create<ast::TypeTemplateParameter>(
                 locationRange,
                 typeToken.comments,
                 nameToken.comments,
@@ -194,7 +284,7 @@ struct Parser
                 implementsKeyword.comments,
                 parentType,
                 dotDotDotToken.comments,
-                hasDotDotDot);
+                hasDotDotDot));
         }
         if(peek().token.type == TokenType::Identifier)
         {
@@ -210,7 +300,7 @@ struct Parser
                 dotDotDotToken = get();
                 locationRange.setEnd(dotDotDotToken.token.locationRange.end());
             }
-            return create<ast::ValueTemplateParameter>(
+            return insertSymbolInCurrentScopeOrReportError(create<ast::ValueTemplateParameter>(
                 locationRange,
                 nameToken.comments,
                 nameToken.token.locationRange,
@@ -218,12 +308,13 @@ struct Parser
                 colonToken.comments,
                 valueType,
                 dotDotDotToken.comments,
-                hasDotDotDot);
+                hasDotDotDot));
         }
         reportError(peek().token.locationRange, "expected: 'type' or template parameter name");
     }
     ast::Interface *parseInterface()
     {
+        auto pushedSymbolLookupChain = makePushNewSymbolTable();
         Location startLocation = peek().token.locationRange.begin();
         auto interfaceKeyword = matchAndGet(TokenType::Interface);
         auto interfaceName = matchAndGet(TokenType::Identifier, "expected: interface name");
@@ -247,20 +338,24 @@ struct Parser
             statements.push_back(parseStatement());
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         auto closingRBrace = matchAndGet(TokenType::RBrace);
-        return create<ast::Interface>(locationRange,
-                                      interfaceKeyword.comments,
-                                      interfaceName.comments,
-                                      interfaceName.token.locationRange,
-                                      context.stringPool.intern(interfaceName.token.getText()),
-                                      templateParameters,
-                                      implementsKeyword.comments,
-                                      parentType,
-                                      openingLBrace.comments,
-                                      std::move(statements),
-                                      closingRBrace.comments);
+        return insertSymbolInParentScopeOrReportError(
+            create<ast::Interface>(locationRange,
+                                   currentSymbolLookupChain,
+                                   currentSymbolLookupChain.head->symbolTable,
+                                   interfaceKeyword.comments,
+                                   interfaceName.comments,
+                                   interfaceName.token.locationRange,
+                                   context.stringPool.intern(interfaceName.token.getText()),
+                                   templateParameters,
+                                   implementsKeyword.comments,
+                                   parentType,
+                                   openingLBrace.comments,
+                                   std::move(statements),
+                                   closingRBrace.comments));
     }
     ast::Enum *parseEnum()
     {
+        auto pushedSymbolLookupChain = makePushNewSymbolTable();
         Location startLocation = peek().token.locationRange.begin();
         auto enumKeyword = matchAndGet(TokenType::Enum);
         auto enumName = matchAndGet(TokenType::Identifier, "expected: enum name");
@@ -292,6 +387,7 @@ struct Parser
                                       context.stringPool.intern(enumValueName.token.getText()),
                                       equalToken.comments,
                                       value);
+            insertSymbolInCurrentScopeOrReportError(enumPart);
             if(peek().token.type == TokenType::Comma)
             {
                 parts.push_back({enumPart, get().comments});
@@ -305,6 +401,8 @@ struct Parser
         LocationRange locationRange(startLocation, peek().token.locationRange.end());
         auto closingRBrace = matchAndGet(TokenType::RBrace);
         auto *retval = create<ast::Enum>(locationRange,
+                                         currentSymbolLookupChain,
+                                         currentSymbolLookupChain.head->symbolTable,
                                          enumKeyword.comments,
                                          enumName.comments,
                                          enumName.token.locationRange,
@@ -316,10 +414,11 @@ struct Parser
                                          closingRBrace.comments);
         for(auto &part : retval->parts)
             part.enumPart->parentEnum = retval;
-        return retval;
+        return insertSymbolInParentScopeOrReportError(retval);
     }
     ast::Function *parseFunction()
     {
+        auto pushedSymbolLookupChain = makePushNewSymbolTable();
         auto functionKeyword = matchAndGet(TokenType::Function);
         auto functionName = matchAndGet(TokenType::Identifier, "expected: function name");
         ast::TemplateParameters *templateParameters = nullptr;
@@ -352,21 +451,24 @@ struct Parser
         auto closingRBrace = matchAndGet(TokenType::RBrace);
         LocationRange locationRange(functionKeyword.token.locationRange.begin(),
                                     closingRBrace.token.locationRange.end());
-        return create<ast::Function>(locationRange,
-                                     functionKeyword.comments,
-                                     functionName.comments,
-                                     functionName.token.locationRange,
-                                     context.stringPool.intern(functionName.token.getText()),
-                                     templateParameters,
-                                     openingLParen.comments,
-                                     firstParameter,
-                                     std::move(parameters),
-                                     closingRParen.comments,
-                                     colonToken.comments,
-                                     returnType,
-                                     openingLBrace.comments,
-                                     std::move(statements),
-                                     closingRBrace.comments);
+        return insertSymbolInParentScopeOrReportError(
+            create<ast::Function>(locationRange,
+                                  currentSymbolLookupChain,
+                                  currentSymbolLookupChain.head->symbolTable,
+                                  functionKeyword.comments,
+                                  functionName.comments,
+                                  functionName.token.locationRange,
+                                  context.stringPool.intern(functionName.token.getText()),
+                                  templateParameters,
+                                  openingLParen.comments,
+                                  firstParameter,
+                                  std::move(parameters),
+                                  closingRParen.comments,
+                                  colonToken.comments,
+                                  returnType,
+                                  openingLBrace.comments,
+                                  std::move(statements),
+                                  closingRBrace.comments));
     }
     ast::FunctionParameter *parseFunctionParameter()
     {
@@ -376,13 +478,13 @@ struct Parser
         auto *type = parseType();
         LocationRange locationRange(parameterName.token.locationRange.begin(),
                                     type->locationRange.end());
-        return create<ast::FunctionParameter>(
-            locationRange,
-            parameterName.comments,
-            parameterName.token.locationRange,
-            context.stringPool.intern(parameterName.token.getText()),
-            colonToken.comments,
-            type);
+        return insertSymbolInCurrentScopeOrReportError(
+            create<ast::FunctionParameter>(locationRange,
+                                           parameterName.comments,
+                                           parameterName.token.locationRange,
+                                           context.stringPool.intern(parameterName.token.getText()),
+                                           colonToken.comments,
+                                           type));
     }
     ast::Statement *parseStatement()
     {
@@ -415,16 +517,16 @@ struct Parser
             auto equalToken = matchAndGet(TokenType::Equal);
             auto *type = parseType();
             auto finalSemicolon = matchAndGet(TokenType::Semicolon);
-            return create<ast::TypeStatement>(
-                LocationRange(typeKeyword.token.locationRange.begin(),
-                              finalSemicolon.token.locationRange.end()),
-                typeKeyword.comments,
-                typeName.comments,
-                typeName.token.locationRange,
-                context.stringPool.intern(typeName.token.getText()),
-                equalToken.comments,
-                type,
-                finalSemicolon.comments);
+            return insertSymbolInCurrentScopeOrReportError(
+                create<ast::TypeStatement>(LocationRange(typeKeyword.token.locationRange.begin(),
+                                                         finalSemicolon.token.locationRange.end()),
+                                           typeKeyword.comments,
+                                           typeName.comments,
+                                           typeName.token.locationRange,
+                                           context.stringPool.intern(typeName.token.getText()),
+                                           equalToken.comments,
+                                           type,
+                                           finalSemicolon.comments));
         }
         case TokenType::Const:
         {
@@ -537,32 +639,49 @@ struct Parser
         }
         case TokenType::For:
         {
+            auto pushedSymbolLookupChain = makePushNewSymbolTable();
             auto forKeyword = get();
             auto openingLParen = matchAndGet(TokenType::LParen);
             if(peek().token.type == TokenType::Type)
             {
                 auto typeKeyword = get();
                 auto typeName = matchAndGet(TokenType::Identifier, "expected: for type name");
+                auto *variable =
+                    insertSymbolInCurrentScopeOrReportError(create<ast::ForStatementVariable>(
+                        typeName.token.locationRange,
+                        typeName.comments,
+                        typeName.token.locationRange,
+                        context.stringPool.intern(typeName.token.getText()),
+                        nullptr));
                 auto inKeyword = matchAndGet(TokenType::In);
                 auto *type = parseType();
                 auto closingRParen = matchAndGet(TokenType::RParen);
                 auto *statement = parseStatement();
                 LocationRange locationRange(forKeyword.token.locationRange.begin(),
                                             statement->locationRange.end());
-                return create<ast::ForTypeStatement>(
-                    locationRange,
-                    forKeyword.comments,
-                    openingLParen.comments,
-                    typeKeyword.comments,
-                    typeName.comments,
-                    typeName.token.locationRange,
-                    context.stringPool.intern(typeName.token.getText()),
-                    inKeyword.comments,
-                    type,
-                    closingRParen.comments,
-                    statement);
+                auto *retval =
+                    create<ast::ForTypeStatement>(locationRange,
+                                                  currentSymbolLookupChain,
+                                                  currentSymbolLookupChain.head->symbolTable,
+                                                  forKeyword.comments,
+                                                  openingLParen.comments,
+                                                  typeKeyword.comments,
+                                                  variable,
+                                                  inKeyword.comments,
+                                                  type,
+                                                  closingRParen.comments,
+                                                  statement);
+                variable->forStatement = retval;
+                return retval;
             }
             auto variableName = matchAndGet(TokenType::Identifier, "expected: for variable name");
+            auto *variable =
+                insertSymbolInCurrentScopeOrReportError(create<ast::ForStatementVariable>(
+                    variableName.token.locationRange,
+                    variableName.comments,
+                    variableName.token.locationRange,
+                    context.stringPool.intern(variableName.token.getText()),
+                    nullptr));
             auto inKeyword = matchAndGet(TokenType::In);
             auto *firstExpression = parseExpression();
             CommentsAndToken toKeyword = {};
@@ -576,19 +695,20 @@ struct Parser
             auto *statement = parseStatement();
             LocationRange locationRange(forKeyword.token.locationRange.begin(),
                                         statement->locationRange.end());
-            return create<ast::ForStatement>(
-                locationRange,
-                forKeyword.comments,
-                openingLParen.comments,
-                variableName.comments,
-                variableName.token.locationRange,
-                context.stringPool.intern(variableName.token.getText()),
-                inKeyword.comments,
-                firstExpression,
-                toKeyword.comments,
-                secondExpression,
-                closingRParen.comments,
-                statement);
+            auto *retval = create<ast::ForStatement>(locationRange,
+                                                     currentSymbolLookupChain,
+                                                     currentSymbolLookupChain.head->symbolTable,
+                                                     forKeyword.comments,
+                                                     openingLParen.comments,
+                                                     variable,
+                                                     inKeyword.comments,
+                                                     firstExpression,
+                                                     toKeyword.comments,
+                                                     secondExpression,
+                                                     closingRParen.comments,
+                                                     statement);
+            variable->forStatement = retval;
+            return retval;
         }
         case TokenType::Match:
         {
@@ -615,6 +735,7 @@ struct Parser
         }
         case TokenType::LBrace:
         {
+            auto pushedSymbolLookupChain = makePushNewSymbolTable();
             auto openingLBrace = get();
             std::vector<ast::Statement *> statements;
             while(peek().token.type != TokenType::RBrace
@@ -624,6 +745,8 @@ struct Parser
             LocationRange locationRange(openingLBrace.token.locationRange.begin(),
                                         closingRBrace.token.locationRange.end());
             return create<ast::BlockStatement>(locationRange,
+                                               currentSymbolLookupChain,
+                                               currentSymbolLookupChain.head->symbolTable,
                                                openingLBrace.comments,
                                                std::move(statements),
                                                closingRBrace.comments);
@@ -682,12 +805,13 @@ struct Parser
         auto *expression = parseExpression();
         LocationRange locationRange(constName.token.locationRange.begin(),
                                     expression->locationRange.end());
-        return create<ast::ConstStatementPart>(locationRange,
-                                               constName.comments,
-                                               constName.token.locationRange,
-                                               context.stringPool.intern(constName.token.getText()),
-                                               equalToken.comments,
-                                               expression);
+        return insertSymbolInCurrentScopeOrReportError(
+            create<ast::ConstStatementPart>(locationRange,
+                                            constName.comments,
+                                            constName.token.locationRange,
+                                            context.stringPool.intern(constName.token.getText()),
+                                            equalToken.comments,
+                                            expression));
     }
     ast::MatchStatementPart *parseMatchStatementPart()
     {
@@ -752,10 +876,11 @@ struct Parser
     ast::LetStatementName *parseLetStatementName()
     {
         auto idToken = matchAndGet(TokenType::Identifier, "expected: name");
-        return create<ast::LetStatementName>(idToken.token.locationRange,
-                                             idToken.comments,
-                                             idToken.token.locationRange,
-                                             context.stringPool.intern(idToken.token.getText()));
+        return insertSymbolInCurrentScopeOrReportError(
+            create<ast::LetStatementName>(idToken.token.locationRange,
+                                          idToken.comments,
+                                          idToken.token.locationRange,
+                                          context.stringPool.intern(idToken.token.getText())));
     }
     ast::InputOutputStatementPart *parseInputOutputStatementPart(bool isInput)
     {
@@ -780,11 +905,11 @@ struct Parser
     {
         auto idToken = matchAndGet(TokenType::Identifier,
                                    isInput ? "expected: input name" : "expected: output name");
-        return create<ast::InputOutputStatementName>(
+        return insertSymbolInCurrentScopeOrReportError(create<ast::InputOutputStatementName>(
             idToken.token.locationRange,
             idToken.comments,
             idToken.token.locationRange,
-            context.stringPool.intern(idToken.token.getText()));
+            context.stringPool.intern(idToken.token.getText())));
     }
     ast::RegStatementPart *parseRegStatementPart()
     {
@@ -817,13 +942,13 @@ struct Parser
             initializer = parseExpression();
             locationRange.setEnd(initializer->locationRange.end());
         }
-        return create<ast::RegStatementNameAndInitializer>(
+        return insertSymbolInCurrentScopeOrReportError(create<ast::RegStatementNameAndInitializer>(
             locationRange,
             regName.comments,
             regName.token.locationRange,
             context.stringPool.intern(regName.token.getText()),
             equalToken.comments,
-            initializer);
+            initializer));
     }
     ast::Expression *parsePrimaryExpression()
     {
@@ -1574,14 +1699,16 @@ struct Parser
             initialTemplateArguments = parseTemplateArguments();
             locationRange.setEnd(initialTemplateArguments->locationRange.end());
         }
-        auto *retval = create<ast::ScopedId>(locationRange,
-                                             nullptr,
-                                             initialColonColon.comments,
-                                             hasInitialColonColon,
-                                             initialName.comments,
-                                             initialName.token.locationRange,
-                                             context.stringPool.intern(initialName.token.getText()),
-                                             initialTemplateArguments);
+        auto *retval = create<ast::ScopedId>(
+            locationRange,
+            nullptr,
+            initialColonColon.comments,
+            hasInitialColonColon,
+            initialName.comments,
+            initialName.token.locationRange,
+            context.stringPool.intern(initialName.token.getText()),
+            initialTemplateArguments,
+            hasInitialColonColon ? globalSymbolLookupChain : currentSymbolLookupChain);
         while(peek().token.type == TokenType::ColonColon)
         {
             auto colonColonToken = get();
@@ -1600,7 +1727,8 @@ struct Parser
                                            name.comments,
                                            name.token.locationRange,
                                            context.stringPool.intern(name.token.getText()),
-                                           templateArguments);
+                                           templateArguments,
+                                           ast::SymbolLookupChain());
         }
         return retval;
     }

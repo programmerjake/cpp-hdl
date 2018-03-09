@@ -78,6 +78,8 @@ set(SOURCES
     slice_expression.cpp
     statement.cpp
     symbol.cpp
+    symbol_lookup_chain.cpp
+    symbol_scope.cpp
     symbol_table.cpp
     template_argument.cpp
     template_arguments.cpp

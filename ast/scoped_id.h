@@ -21,6 +21,7 @@
 
 #include "node.h"
 #include "comment.h"
+#include "symbol_lookup_chain.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
 #include "template_arguments.h"
@@ -38,6 +39,7 @@ public:
     parse::LocationRange nameLocationRange;
     util::StringPool::Entry name;
     TemplateArguments *templateArguments;
+    SymbolLookupChain symbolLookupChain;
     explicit ScopedId(parse::LocationRange locationRange,
                       ScopedId *parentScope,
                       ConsecutiveComments beforeColonColonComments,
@@ -45,7 +47,8 @@ public:
                       ConsecutiveComments beforeNameComments,
                       parse::LocationRange nameLocationRange,
                       util::StringPool::Entry name,
-                      TemplateArguments *templateArguments) noexcept
+                      TemplateArguments *templateArguments,
+                      SymbolLookupChain symbolLookupChain) noexcept
         : Node(locationRange),
           parentScope(parentScope),
           beforeColonColonComments(beforeColonColonComments),
@@ -53,7 +56,8 @@ public:
           beforeNameComments(beforeNameComments),
           nameLocationRange(nameLocationRange),
           name(name),
-          templateArguments(templateArguments)
+          templateArguments(templateArguments),
+          symbolLookupChain(symbolLookupChain)
     {
     }
     virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;

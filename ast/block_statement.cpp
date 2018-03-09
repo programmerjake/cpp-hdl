@@ -24,6 +24,7 @@ namespace ast
 void BlockStatement::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Statement::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::BlockStatement";
     state.setSimple(dumpNode, "beforeLBraceComments", beforeLBraceComments);
     state.setPointerArray(dumpNode, "statements", statements);

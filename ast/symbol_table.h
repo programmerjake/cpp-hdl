@@ -24,6 +24,7 @@
 #include "symbol.h"
 #include <vector>
 #include "context.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -54,6 +55,14 @@ public:
         }
         return false;
     }
-    static SymbolTable *createGlobalSymbolTable(Context &context);
+    static SymbolTable *getGlobalSymbolTable(Context &context);
+    void dump(util::DumpTree *dumpNode, util::DumpState &state) const;
 };
+
+inline void utilDumpFunction(const SymbolTable *symbolTable,
+                             util::DumpTree *dumpNode,
+                             util::DumpState &state)
+{
+    symbolTable->dump(dumpNode, state);
+}
 }

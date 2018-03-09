@@ -26,6 +26,7 @@ void Function::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Node::dump(dumpNode, state);
     Symbol::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::Function";
     state.setSimple(dumpNode, "beforeFunctionComments", beforeFunctionComments);
     state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);

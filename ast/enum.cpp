@@ -37,6 +37,7 @@ void Enum::dump(util::DumpTree *dumpNode, util::DumpState &state) const
 {
     Node::dump(dumpNode, state);
     Symbol::dump(dumpNode, state);
+    SymbolScope::dump(dumpNode, state);
     dumpNode->nodeName = "ast::Enum";
     state.setSimple(dumpNode, "beforeEnumComments", beforeEnumComments);
     state.setSimple(dumpNode, "beforeNameComments", beforeNameComments);

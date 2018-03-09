@@ -21,6 +21,7 @@
 
 #include "node.h"
 #include "symbol.h"
+#include "symbol_scope.h"
 #include "comment.h"
 #include "template_parameters.h"
 #include "function_parameter.h"
@@ -33,7 +34,7 @@
 
 namespace ast
 {
-class Function final : public Node, public Symbol
+class Function final : public Node, public Symbol, public SymbolScope
 {
 public:
     struct Parameter final
@@ -60,6 +61,8 @@ public:
     std::vector<Statement *> statements;
     ConsecutiveComments beforeRBraceComments;
     explicit Function(parse::LocationRange locationRange,
+                      SymbolLookupChain symbolLookupChain,
+                      SymbolTable *symbolTable,
                       ConsecutiveComments beforeFunctionComments,
                       ConsecutiveComments beforeNameComments,
                       parse::LocationRange nameLocationRange,
@@ -76,6 +79,7 @@ public:
                       ConsecutiveComments beforeRBraceComments) noexcept
         : Node(locationRange),
           Symbol(nameLocationRange, name),
+          SymbolScope(symbolLookupChain, symbolTable),
           beforeFunctionComments(beforeFunctionComments),
           beforeNameComments(beforeNameComments),
           templateParameters(templateParameters),

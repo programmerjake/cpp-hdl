@@ -25,6 +25,7 @@
 #include "expression.h"
 #include "../parse/source.h"
 #include "../util/string_pool.h"
+#include "symbol_scope.h"
 #include "type.h"
 #include <vector>
 #include "../util/dump_tree.h"
@@ -56,7 +57,7 @@ public:
     virtual void dump(util::DumpTree *dumpNode, util::DumpState &state) const override;
 };
 
-class Enum final : public Node, public Symbol
+class Enum final : public Node, public Symbol, public SymbolScope
 {
 public:
     struct Part final
@@ -77,6 +78,8 @@ public:
     std::vector<Part> parts;
     ConsecutiveComments beforeRBraceComments;
     explicit Enum(parse::LocationRange locationRange,
+                  SymbolLookupChain symbolLookupChain,
+                  SymbolTable *symbolTable,
                   ConsecutiveComments beforeEnumComments,
                   ConsecutiveComments beforeNameComments,
                   parse::LocationRange symbolLocationRange,
@@ -88,6 +91,7 @@ public:
                   ConsecutiveComments beforeRBraceComments) noexcept
         : Node(locationRange),
           Symbol(symbolLocationRange, name),
+          SymbolScope(symbolLookupChain, symbolTable),
           beforeEnumComments(beforeEnumComments),
           beforeNameComments(beforeNameComments),
           beforeColonComments(beforeColonComments),

@@ -21,6 +21,7 @@
 
 #include "symbol_table.h"
 #include "../util/string_pool.h"
+#include "../util/dump_tree.h"
 
 namespace ast
 {
@@ -32,7 +33,15 @@ struct SymbolLookupChainNode
         : parent(parent), symbolTable(symbolTable)
     {
     }
+    void dump(util::DumpTree *dumpNode, util::DumpState &state) const;
 };
+
+inline void utilDumpFunction(const SymbolLookupChainNode *symbolLookupChainNode,
+                             util::DumpTree *dumpNode,
+                             util::DumpState &state)
+{
+    symbolLookupChainNode->dump(dumpNode, state);
+}
 
 struct SymbolLookupChain
 {
@@ -53,5 +62,13 @@ struct SymbolLookupChain
         }
         return nullptr;
     }
+    void dump(util::DumpTree *dumpNode, util::DumpState &state) const;
 };
+
+inline void utilDumpFunction(const SymbolLookupChain *symbolLookupChain,
+                             util::DumpTree *dumpNode,
+                             util::DumpState &state)
+{
+    symbolLookupChain->dump(dumpNode, state);
+}
 }
